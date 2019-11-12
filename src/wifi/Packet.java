@@ -31,16 +31,19 @@ public class Packet{
     private final int destIndex = 2;
     private final int srcIndex = 4;
     private final int dataIndex = 6;
-    private final int crcIndex = 2044;
+    public int crcIndex = 2044;
     public boolean isRetry;
     public String controlField;
 
     public Packet(byte[] byteArray){
         myBytes = byteArray;
     }
-
-    public Packet(byte[] data, byte[] src, byte[] dest, byte[] seq){
-        
+    //data.len = 2038 src.len = 2 dest.len = 2 seqNum.len = 2
+    public Packet(byte[] seqNum, byte[] dest, byte[] src, byte[] data){
+        this.myBytes = new byte[10+data.length];
+        setDest(dest);
+        setSrc(src);
+        setData(data);
     }
     /*
     public byte[] getControlField(){
@@ -72,12 +75,26 @@ public class Packet{
         return new byte[]{seqNumByte & controlField[0], controlField[1]};
     }
     */
+    public byte[] getPacket(){
+        return myBytes;
+    }
+
     public byte[] getDest(){
         return new byte[]{myBytes[destIndex], myBytes[destIndex+1]};
     }
 
+    public void setDest(byte[] newDest){
+        myBytes[destIndex] = newDest[0];
+        myBytes[destIndex+1] = newDest[1];
+    }
+
     public byte[] getSrc(){
         return new byte[]{myBytes[srcIndex], myBytes[srcIndex+1]};
+    }
+
+    public void setSrc(byte[] newSrc){
+        myBytes[srcIndex] = newSrc[0];
+        myBytes[srcIndex+1] = newSrc[1];
     }
     
     public byte[] getCRC(){
@@ -89,18 +106,31 @@ public class Packet{
     }
 
     public byte[] getData(){
-        byte[] data = new byte[2038];
+        byte[] data = new byte[myBytes.length-10];
         for(int i = 0; i < data.length; i++){
             data[i] = myBytes[dataIndex+i];
         }
         return data;
     }
 
+    public void setData(byte[] data){
+        for(int i = 0; i < data.length; i++){
+            myBytes[dataIndex+i] = data[i];
+        }
+        crcIndex = dataIndex + data.length;
+    }
+
     
     public static void main(String[] args){
-        byte[] arr = new byte[2048];
-        Packet packet = new Packet(arr);
+        byte[] data = new byte[3];
+        byte[] src = new byte[2];
+        Packet packet = new Packet(src, src, src, data);
         System.out.print(packet.getData()+""+packet.getDest()+" "+packet.getSrc()+" "+packet.getCRC());
+        byte[] packetArr = packet.getPacket();
+        System.out.println("fuck "+packetArr.length);
+        for(int i = 0; i < packet.getPacket().length; i++){
+            System.out.println(packetArr[i]);
+        }
     }
 }
     

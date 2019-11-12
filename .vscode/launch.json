@@ -1,0 +1,12 @@
+{
+    "configurations": [
+        
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - Packet",
+            "request": "launch",
+            "mainClass": "wifi.Packet",
+            "projectName": "WiFiProject"
+        }
+    ]
+}
