@@ -15,10 +15,11 @@ public class Sender implements Runnable {
         while(true) {
             try {
                 Packet packet = messageQueue.take();
+                attemptSend(packet);
             } catch (Exception e){
                 System.out.println("getting the packet from the queue failed");
             }
-            attemptSend(packet);
+
         }
     }
     /**
@@ -30,7 +31,7 @@ public class Sender implements Runnable {
         while ( packetSent == false ) {
             if( !theRF.inUse() ){
                 try {
-                    theRF.tranmit(packetToSend.getPacket());
+                    theRF.transmit(packetToSend.getPacket());
                 } catch (Exception e){
                     System.out.println("Uh Oh... Something went terribly wrong when we tried to send your packet");
                 }
