@@ -51,6 +51,7 @@ public class Packet{
         setDest(shortToBytes(dest));
         setSrc(shortToBytes(ourMac));
         setData(data);
+        setSrc(new byte[]{new Byte("11111111"), new Byte("11111111")});
     }
     /*
     public byte[] getControlField(){
