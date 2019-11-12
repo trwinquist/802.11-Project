@@ -45,6 +45,13 @@ public class Packet{
         setSrc(src);
         setData(data);
     }
+
+    public Packet(short dest, short ourMac, byte[] data){
+        myBytes = new byte[10+data.length];
+        setDest(shortToBytes(dest));
+        setSrc(shortToBytes(ourMac));
+        setData(data);
+    }
     /*
     public byte[] getControlField(){
         byte[] controlField = new byte[controlFieldIndex];
@@ -132,6 +139,13 @@ public class Packet{
         int temp = b1 & 0xFF;
         temp = temp << 8 | b2 & 0xFF;
         return (short)temp;
+    }
+
+    private byte[] shortToBytes(short x){
+        byte[] bytes = new byte[2];
+        bytes[0] = (byte) x;
+        bytes[1] = (byte) (x >> 8);
+        return bytes;
     }
 
     
