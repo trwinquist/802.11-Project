@@ -83,6 +83,10 @@ public class Packet{
         return new byte[]{myBytes[destIndex], myBytes[destIndex+1]};
     }
 
+    public short getDestShort(){
+        return bytesToShort(getDest()[0],getDest()[1]);
+    }
+
     public void setDest(byte[] newDest){
         myBytes[destIndex] = newDest[0];
         myBytes[destIndex+1] = newDest[1];
@@ -90,6 +94,10 @@ public class Packet{
 
     public byte[] getSrc(){
         return new byte[]{myBytes[srcIndex], myBytes[srcIndex+1]};
+    }
+
+    public short getSrcShort(){
+        return bytesToShort(getSrc()[0],getSrc()[1]);
     }
 
     public void setSrc(byte[] newSrc){
@@ -118,6 +126,12 @@ public class Packet{
             myBytes[dataIndex+i] = data[i];
         }
         crcIndex = dataIndex + data.length;
+    }
+
+    private short bytesToShort(byte b1, byte b2) {
+        int temp = b1 & 0xFF;
+        temp = temp << 8 | b2 & 0xFF;
+        return (short)temp;
     }
 
     
