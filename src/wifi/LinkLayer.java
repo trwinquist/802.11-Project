@@ -42,7 +42,7 @@ public class LinkLayer implements Dot11Interface
 	public int send(short dest, byte[] data, int len) {
 		output.println("LinkLayer: Sending "+len+" bytes to "+dest);
 		Packet packet = new Packet(dest, ourMAC, data);
-		sendQueue.add(packet);
+		sendQueue.put(packet);
 		return len;
 	}
 
