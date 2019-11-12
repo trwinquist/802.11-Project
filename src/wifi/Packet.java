@@ -145,16 +145,16 @@ public class Packet{
         crcIndex = dataIndex + data.length;
     }
 
-    private short bytesToShort(byte b1, byte b2) {
+    public short bytesToShort(byte b1, byte b2) {
         int temp = b1 & 0xFF;
         temp = temp << 8 | b2 & 0xFF;
         return (short)temp;
     }
 
-    private byte[] shortToBytes(short x){
+    public byte[] shortToBytes(short x){
         byte[] bytes = new byte[2];
-        bytes[0] = (byte) x;
-        bytes[1] = (byte) (x >> 8);
+        bytes[1] = (byte) x;
+        bytes[0] = (byte) (x >> 8);
         return bytes;
     }
 
@@ -173,6 +173,11 @@ public class Packet{
             System.out.println(packet.getCRC()[i]+ " crc");
         }
         System.out.println(Byte.MIN_VALUE);
+
+        short test = 703;
+        byte[] testo = packet.shortToBytes(test);
+        System.out.println(testo[0]+" "+testo[1]);
+        System.out.println(packet.bytesToShort(testo[0], testo[1]));
     }
 }
     
