@@ -1,5 +1,7 @@
 package wifi;
 import java.io.PrintWriter;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import rf.RF;
 
@@ -13,6 +15,7 @@ public class LinkLayer implements Dot11Interface
 	private RF theRF;           // You'll need one of these eventually
 	private short ourMAC;       // Our MAC address
 	private PrintWriter output; // The output stream we'll write to
+	private BlockingQueue<Packet> recvQueue;
 
 	/**
 	 * Constructor takes a MAC address and the PrintWriter to which our output will
@@ -24,6 +27,7 @@ public class LinkLayer implements Dot11Interface
 		this.ourMAC = ourMAC;
 		this.output = output;      
 		theRF = new RF(null, null);
+		recvQueue = new LinkedBlockingQueue(4);
 		output.println("LinkLayer: Constructor ran.");
 	}
 
@@ -42,9 +46,24 @@ public class LinkLayer implements Dot11Interface
 	 * the Transmission object.  See docs for full description.
 	 */
 	public int recv(Transmission t) {
-		output.println("LinkLayer: Pretending to block on recv()");
-		while(true); // <--- This is a REALLY bad way to wait.  Sleep a little each time through.
-		// return 0;
+        if (this.recvQueue.isEmpty()) {
+            output.println("Receive is being blocked, waiting for data.");
+        }
+        
+        try {
+            Packet p = (Packet)this.recvQueue.take();
+            byte[] data = p.getData();
+
+            t.setSourceAddr(p.getSource());
+            t.setDestAddr(p.getDest());
+            t.setBuf(data);
+            return data.length;
+        } catch (InterruptedException e) {
+            System.err.println("Interrupted while dequeueing the incoming data!");
+            e.printStackTrace();
+
+            return -1;
+        } 
 	}
 
 	/**
