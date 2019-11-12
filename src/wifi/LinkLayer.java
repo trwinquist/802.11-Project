@@ -54,8 +54,8 @@ public class LinkLayer implements Dot11Interface
             Packet p = (Packet)this.recvQueue.take();
             byte[] data = p.getData();
 
-            t.setSourceAddr(p.getSource());
-            t.setDestAddr(p.getDest());
+            t.setSourceAddr(p.getSrcShort());
+            t.setDestAddr(p.getDestShort());
             t.setBuf(data);
             return data.length;
         } catch (InterruptedException e) {
