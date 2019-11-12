@@ -44,7 +44,7 @@ public class Packet{
         setDest(dest);
         setSrc(src);
         setData(data);
-        setCRC(new byte[]{Byte.MAX_VALUE, Byte.MAX_VALUE, Byte.MAX_VALUE, Byte.MAX_VALUE});
+        setCRC(new byte[]{(byte) 255, (byte) 255, (byte) 255, (byte) 255});
     }
 
     public Packet(short dest, short ourMac, byte[] data){
@@ -52,7 +52,7 @@ public class Packet{
         setDest(shortToBytes(dest));
         setSrc(shortToBytes(ourMac));
         setData(data);
-        setCRC(new byte[]{Byte.MAX_VALUE, Byte.MAX_VALUE, Byte.MAX_VALUE, Byte.MAX_VALUE});
+        setCRC(new byte[]{(byte) 255, (byte) 255, (byte) 255, (byte) 255});
     }
     /*
     public byte[] getControlField(){
@@ -127,7 +127,7 @@ public class Packet{
             myBytes[crcIndex+i] = newCRC[i];
 
         }
-        System.out.println("crc here"+newCRC[0]);
+        //System.out.println("crc here"+newCRC[0]);
     }
 
     public byte[] getData(){
@@ -169,7 +169,10 @@ public class Packet{
         for(int i = 0; i < packet.getPacket().length; i++){
             System.out.println(packetArr[i]);
         }
-        System.out.println(new byte[]{new Byte((byte) 255),new Byte((byte) 255),new Byte((byte) 255),new Byte((byte) 255)});
+        for(int i = 0; i < 4; i++){
+            System.out.println(packet.getCRC()[i]+ " crc");
+        }
+        System.out.println(Byte.MIN_VALUE);
     }
 }
     
