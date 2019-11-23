@@ -1,5 +1,7 @@
 package wifi;
 //import java.lang;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
 public class Packet{
     /*
@@ -31,9 +33,10 @@ public class Packet{
     private final int destIndex = 2;
     private final int srcIndex = 4;
     private final int dataIndex = 6;
+    private Checksum crc;
     public int crcIndex = 2044;
     public boolean isRetry;
-    public String controlField;
+    
 
     public Packet(byte[] byteArray){
         myBytes = byteArray;
@@ -44,7 +47,8 @@ public class Packet{
         setDest(dest);
         setSrc(src);
         setData(data);
-        setCRC(new byte[]{(byte) 255, (byte) 255, (byte) 255, (byte) 255});
+        crc = new CRC32();
+        setCRC();
     }
 
     public Packet(short dest, short ourMac, byte[] data){
@@ -52,7 +56,8 @@ public class Packet{
         setDest(shortToBytes(dest));
         setSrc(shortToBytes(ourMac));
         setData(data);
-        setCRC(new byte[]{(byte) 255, (byte) 255, (byte) 255, (byte) 255});
+        crc = new CRC32();
+        setCRC();
     }
     
     public byte[] getControlField(){
@@ -147,9 +152,11 @@ public class Packet{
         return crc;
     }
 
-    public void setCRC(byte[] newCRC){
-        for(int i = 0; i < newCRC.length; i++){
-            myBytes[crcIndex+i] = newCRC[i];
+    public void setCRC(){
+        crc.update(myBytes, 0, myBytes.length);
+        byte[] newCrc = longToBytes(crc.getValue());
+        for(int i = 0; i < 4; i++){
+            myBytes[crcIndex+i] = newCrc[i];
         }
     }
 
@@ -190,6 +197,14 @@ public class Packet{
         return bytes;
     }
 
+    public byte[] longToBytes(long x){
+        byte[] bytes = new byte[4];
+        for(int i = bytes.length-1; i >= 0; i--){
+            bytes[i] = (byte) (x >> (3-i)*8);
+        }
+        return bytes;
+    }
+
     public String toString(){
         String toString = "";
         toString += "Frame Type: " + getFrameType() + "\n";
@@ -201,6 +216,12 @@ public class Packet{
         for(int i = 0; i < getData().length; i++){
             toString += getData()[i]; 
         }
+        toString += "\n";
+        toString += "CRC: "+ crc.getValue()+ " bytes= ";
+        for(int i = 0; i < getCRC().length; i++){
+            toString += getCRC()[i];
+        }
+
         toString += "\n";
         for(int i = 0; i < myBytes.length; i++){
             toString += myBytes[i];
@@ -220,7 +241,7 @@ public class Packet{
         System.out.println(packet.toString());
         packet.setData(new byte[20]);
         System.out.println(packet.toString());
-        packet.setCRC(new byte[]{1,2,3,4});
+        packet.setCRC();
         System.out.println(packet.toString());
         packet.setSrc(new byte[]{6,9});
         System.out.println(packet.toString());
