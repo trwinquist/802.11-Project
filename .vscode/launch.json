@@ -5,7 +5,7 @@
             "type": "java",
             "name": "CodeLens (Launch) - Packet",
             "request": "launch",
-            "mainClass": "wifi.Packet",
+            "mainClass": "wifi.WiFiClient",
             "projectName": "WiFiProject"
         }
     ]

@@ -245,37 +245,5 @@ public class Packet{
         return toString;
 
     }
-
-    
-    public static void main(String[] args){
-        byte[] data = new byte[3];
-        byte[] src = new byte[2];
-        System.out.println("new default packet");
-        Packet packet = new Packet(src, src, src, data);
-        //tests
-        packet.setDest(new byte[] {1,1});
-        System.out.println(packet.toString());
-        packet.setData(new byte[20]);
-        System.out.println(packet.toString());
-        //packet.setCRC();
-        System.out.println(packet.toString());
-        packet.setSrc(new byte[]{6,9});
-        System.out.println(packet.toString());
-        packet.setSeqNum((short)80);
-        System.out.println(packet.toString());
-        packet.setFrameType((byte)1);
-        System.out.println(packet.toString());
-        short localMac = (short) 0000000000000000;
-        File file = new File("output.txt");
-        PrintWriter writer;
-        try{
-            writer = new PrintWriter(file);
-            LinkLayer wifi = new LinkLayer(localMac, writer);
-        }
-        catch(FileNotFoundException e){
-            System.out.println(e);
-        }
-        
-    }
 }
     

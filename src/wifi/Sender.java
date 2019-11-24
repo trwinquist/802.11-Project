@@ -36,12 +36,13 @@ public class Sender implements Runnable {
                 try {
                     theRF.transmit(packetToSend.getPacket());
                     System.out.println("Transmitted a packet");
+                    packetSent = true;
                 } catch (Exception e){
                     System.out.println("Uh Oh... Something went terribly wrong when we tried to send your packet");
                 }
-                packetSent = true;
             } else {
                 try {
+                    System.out.println("thinks we should put thread to sleep");
                     Thread.sleep(1000);
                 } catch(Exception e){
                     System.out.println("Something went wrong sleeping");
