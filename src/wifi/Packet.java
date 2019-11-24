@@ -1,4 +1,9 @@
+
 package wifi;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 //import java.lang;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
@@ -33,7 +38,8 @@ public class Packet{
     private final int destIndex = 2;
     private final int srcIndex = 4;
     private final int dataIndex = 6;
-    private Checksum crc;
+    //private Checksum crc;
+    private byte[] dumbCrc = new byte[]{(byte) 255, (byte) 255, (byte) 255, (byte) 255};
     public int crcIndex = 2044;
     public boolean isRetry;
     
@@ -47,8 +53,9 @@ public class Packet{
         setDest(dest);
         setSrc(src);
         setData(data);
-        crc = new CRC32();
-        setCRC();
+        //crc = new CRC32();
+        //setCRC();
+        setDumbCrc();
     }
 
     public Packet(short dest, short ourMac, byte[] data){
@@ -56,8 +63,9 @@ public class Packet{
         setDest(shortToBytes(dest));
         setSrc(shortToBytes(ourMac));
         setData(data);
-        crc = new CRC32();
-        setCRC();
+        //crc = new CRC32();
+        //setCRC();
+        
     }
     
     public byte[] getControlField(){
@@ -151,12 +159,19 @@ public class Packet{
         }
         return crc;
     }
-
+    /*
     public void setCRC(){
         crc.update(myBytes, 0, myBytes.length);
         byte[] newCrc = longToBytes(crc.getValue());
         for(int i = 0; i < 4; i++){
             myBytes[crcIndex+i] = newCrc[i];
+        }
+    }
+    */
+
+    public void setDumbCrc(){
+        for(int i = 0; i < dumbCrc.length; i++){
+            myBytes[crcIndex+i] = dumbCrc[i];
         }
     }
 
@@ -182,6 +197,7 @@ public class Packet{
         resetPacket(newMyBytes);
         //reset crcIndex
         crcIndex = myBytes.length - 4;
+        setDumbCrc();
     }
 
     public short bytesToShort(byte b1, byte b2) {
@@ -217,7 +233,7 @@ public class Packet{
             toString += getData()[i]; 
         }
         toString += "\n";
-        toString += "CRC: "+ crc.getValue()+ " bytes= ";
+        toString += "CRC: ";
         for(int i = 0; i < getCRC().length; i++){
             toString += getCRC()[i];
         }
@@ -241,7 +257,7 @@ public class Packet{
         System.out.println(packet.toString());
         packet.setData(new byte[20]);
         System.out.println(packet.toString());
-        packet.setCRC();
+        //packet.setCRC();
         System.out.println(packet.toString());
         packet.setSrc(new byte[]{6,9});
         System.out.println(packet.toString());
@@ -249,6 +265,17 @@ public class Packet{
         System.out.println(packet.toString());
         packet.setFrameType((byte)1);
         System.out.println(packet.toString());
+        short localMac = (short) 0000000000000000;
+        File file = new File("output.txt");
+        PrintWriter writer;
+        try{
+            writer = new PrintWriter(file);
+            LinkLayer wifi = new LinkLayer(localMac, writer);
+        }
+        catch(FileNotFoundException e){
+            System.out.println(e);
+        }
+        
     }
 }
     
