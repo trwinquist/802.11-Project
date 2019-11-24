@@ -5,9 +5,11 @@ import rf.RF;
 
 public class Reciever implements Runnable {
     BlockingQueue<Packet> recvQueue;
+    BlockingQueue<Packet> sendQueue;
     RF theRF;
-    public Reciever(BlockingQueue<Packet> theQueue, RF theRF){
+    public Reciever(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> sendQueue, RF theRF){
         this.recvQueue = theQueue;
+        this.sendQueue = sendQueue;
         this.theRF = theRF;
     }
     
@@ -19,9 +21,16 @@ public class Reciever implements Runnable {
                 System.out.println("Received a packet");
                 if(buffer.length > 0) {
                 	Packet recvPacket = new Packet(buffer);
-                	recvQueue.put(recvPacket);
+                    recvQueue.put(recvPacket);
+                    
+                    //now that we have recieved a packet we need to acknowledge that we got it
+                    Thread.Sleep(theRF.aSIFSTime);
+                    byte[] data = new byte[2048];
+                    Packet ack1 = new Packet(data);
+                    ack1.setFrameType((byte) 001);
+                    ack1.setDest(recvPacket.getSrc());
+                    sendQueue.put(ack1);
                 }
-                Thread.sleep(7000);
                 	
             } catch (Exception e){
                 System.out.println("getting the packet from the queue failed");
