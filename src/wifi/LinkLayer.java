@@ -31,7 +31,11 @@ public class LinkLayer implements Dot11Interface
 		sendQueue = new LinkedBlockingQueue(4);
 		recvQueue = new LinkedBlockingQueue(4);
 		Sender transmitter = new Sender(sendQueue, theRF);
+<<<<<<< HEAD
+		Reciever getter = new Reciever(recvQueue, theRF, this.ourMAC);
+=======
 		Receiver getter = new Receiver(recvQueue, sendQueue, theRF);
+>>>>>>> 80b066d84ffc426d2371305157b05c816f670b54
 		(new Thread(transmitter)).start();
 		(new Thread(getter)).start();
 		output.println("LinkLayer: Constructor ran.");
@@ -64,11 +68,11 @@ public class LinkLayer implements Dot11Interface
         try {
             Packet p = (Packet)this.recvQueue.take();
             byte[] data = p.getData();
-
             t.setSourceAddr(p.getSrcShort());
             t.setDestAddr(p.getDestShort());
             t.setBuf(data);
             return data.length;
+
         } catch (InterruptedException e) {
             System.err.println("Interrupted while dequeueing the incoming data!");
             e.printStackTrace();
