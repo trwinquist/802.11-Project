@@ -5,9 +5,11 @@ import rf.RF;
 
 public class Sender implements Runnable {
     BlockingQueue<Packet> messageQueue;
+    BlockingQueue<Packet> ackQueue;
     RF theRF;
-    public Sender( BlockingQueue<Packet> theQueue, RF theRF ){
+    public Sender( BlockingQueue<Packet> theQueue, BlockingQueue<Packet> acks,  RF theRF ){
         this.messageQueue = theQueue;
+        this.ackQueue = acks;
         this.theRF = theRF;
     }
     //
@@ -89,7 +91,7 @@ public class Sender implements Runnable {
                 theRF.transmit(packetToSend.getPacket());
                 currentState = State.WAITFORACK;
             case WAITFORACK:
-                
+                boolean acked = false;
         }
     }
     /**
