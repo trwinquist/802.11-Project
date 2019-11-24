@@ -31,7 +31,7 @@ public class LinkLayer implements Dot11Interface
 		sendQueue = new LinkedBlockingQueue(4);
 		recvQueue = new LinkedBlockingQueue(4);
 		Sender transmitter = new Sender(sendQueue, theRF);
-		Reciever getter = new Reciever(recvQueue, theRF);
+		Receiver getter = new Receiver(recvQueue, sendQueue, theRF);
 		(new Thread(transmitter)).start();
 		(new Thread(getter)).start();
 		output.println("LinkLayer: Constructor ran.");

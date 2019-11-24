@@ -3,11 +3,11 @@ import java.util.*;
 import java.util.concurrent.*;
 import rf.RF;
 
-public class Reciever implements Runnable {
+public class Receiver implements Runnable {
     BlockingQueue<Packet> recvQueue;
     BlockingQueue<Packet> sendQueue;
     RF theRF;
-    public Reciever(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> sendQueue, RF theRF){
+    public Receiver(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> sendQueue, RF theRF){
         this.recvQueue = theQueue;
         this.sendQueue = sendQueue;
         this.theRF = theRF;
@@ -24,7 +24,7 @@ public class Reciever implements Runnable {
                     recvQueue.put(recvPacket);
                     
                     //now that we have recieved a packet we need to acknowledge that we got it
-                    Thread.Sleep(theRF.aSIFSTime);
+                    Thread.sleep(theRF.aSIFSTime);
                     byte[] data = new byte[2048];
                     Packet ack1 = new Packet(data);
                     ack1.setFrameType((byte) 001);

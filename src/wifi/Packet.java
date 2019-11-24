@@ -1,4 +1,9 @@
+
 package wifi;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 //import java.lang;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
@@ -260,6 +265,17 @@ public class Packet{
         System.out.println(packet.toString());
         packet.setFrameType((byte)1);
         System.out.println(packet.toString());
+        short localMac = (short) 0000000000000000;
+        File file = new File("output.txt");
+        PrintWriter writer;
+        try{
+            writer = new PrintWriter(file);
+            LinkLayer wifi = new LinkLayer(localMac, writer);
+        }
+        catch(FileNotFoundException e){
+            System.out.println(e);
+        }
+        
     }
 }
     
