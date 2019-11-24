@@ -8,14 +8,14 @@ public class Receiver implements Runnable {
     BlockingQueue<Packet> sendQueue;
     RF theRF;
     short localMac;
-    
+
     public Receiver(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> sendQueue, short ourMac, RF theRF){
         this.recvQueue = theQueue;
         this.sendQueue = sendQueue;
         this.theRF = theRF;
         this.localMac = ourMac;
     }
-    
+
     //
     public void run(){
         while(true) {
@@ -25,10 +25,10 @@ public class Receiver implements Runnable {
                 if(buffer.length > 0) {
                     Packet recvPacket = new Packet(buffer);
                     if(recvPacket.getDestShort() == localMac) {
-                    	recvQueue.put(recvPacket);
-                	} else {
-                		System.out.println("Received a packet meant for " + recvPacket.getDestShort());
-                	}
+                        recvQueue.put(recvPacket);
+                	  } else {
+                		    System.out.println("Received a packet meant for " + recvPacket.getDestShort());
+                	  }
 
                     //if we receive a packet after and it is our acknowledgement put it in a box
                     if(recvPacket.getFrameType() == (byte) 001){
@@ -56,7 +56,7 @@ public class Receiver implements Runnable {
                     sendQueue.put(ack1);
                     System.out.println("finished putting ack on the stack");
                 }
-                	
+
             } catch (Exception e){
                 System.out.println("getting the packet from the queue failed");
             }
