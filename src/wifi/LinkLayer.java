@@ -64,11 +64,11 @@ public class LinkLayer implements Dot11Interface
         try {
             Packet p = (Packet)this.recvQueue.take();
             byte[] data = p.getData();
-
             t.setSourceAddr(p.getSrcShort());
             t.setDestAddr(p.getDestShort());
             t.setBuf(data);
             return data.length;
+
         } catch (InterruptedException e) {
             System.err.println("Interrupted while dequeueing the incoming data!");
             e.printStackTrace();

@@ -23,8 +23,13 @@ public class Receiver implements Runnable {
             	byte[] buffer = theRF.receive();
                 System.out.println("Received a packet");
                 if(buffer.length > 0) {
-                	Packet recvPacket = new Packet(buffer);
-                    recvQueue.put(recvPacket);
+                    Packet recvPacket = new Packet(buffer);
+                    if(recvPacket.getDestShort() == localMac) {
+                    	recvQueue.put(recvPacket);
+                	} else {
+                		System.out.println("Received a packet meant for " + recvPacket.getDestShort());
+                	}
+
                     //if we receive a packet after and it is our acknowledgement put it in a box
                     if(recvPacket.getFrameType() == (byte) 001){
                         System.out.println("we received an acknowledgement!");
