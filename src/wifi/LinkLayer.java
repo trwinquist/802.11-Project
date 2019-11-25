@@ -32,7 +32,7 @@ public class LinkLayer implements Dot11Interface
 		sendQueue = new LinkedBlockingQueue(4);
 		recvQueue = new LinkedBlockingQueue(4);
 		ackQueue = new LinkedBlockingQueue(4);
-		Sender transmitter = new Sender(sendQueue, theRF);
+		Sender transmitter = new Sender(sendQueue, ackQueue, theRF);
 		Receiver getter = new Receiver(recvQueue, sendQueue, ackQueue, ourMAC, theRF);
 		(new Thread(transmitter)).start();
 		(new Thread(getter)).start();

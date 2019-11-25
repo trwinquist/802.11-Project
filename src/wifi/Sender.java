@@ -48,6 +48,7 @@ public class Sender implements Runnable {
                         currentState = State.WAITFORTRANSMISSIONTOEND;
                     } else {
                         if (packetToSend.getFrameType() == (byte) 1) {
+
                             Thread.sleep(theRF.aSIFSTime);
                         } else {
                             Thread.sleep(theRF.aSIFSTime + 2 * theRF.aSlotTime);
