@@ -21,7 +21,7 @@ public class Sender implements Runnable {
                 Packet packet = messageQueue.take();
                 System.out.println("took packet from the queue");
                 if (packet != null) {
-                    attemptSend(packet);
+                    sendData(packet);
                 }
             } catch (Exception e) {
                 System.out.println("getting the packet from the queue failed");
@@ -97,16 +97,27 @@ public class Sender implements Runnable {
             case TRANSMIT:
                 theRF.transmit(packetToSend.getPacket());
                 currentState = State.WAITFORACK;
-
             case WAITFORACK:
                 boolean acked = false;
                 long startTime = theRF.clock();
-                long timeOut = startTime + timeouttime
+                long timeOut = startTime + 20L;
+                short ackSeqNum = 0;
                 while (acked == false) {
-                    if (ackQueue.size() == 1) {
-                        ackQueue.
+                    if (theRF.clock() >= timeOut) {
+                        currentState = State.TRANSMIT;
                     }
-                    if (theRF.clock())
+                    if (ackQueue.size() == 1) {
+                        try{
+                            ackSeqNum = ackQueue.take().getSeqNumShort();
+                        } catch ( Exception e) {
+                            System.out.println("something went wrong getting seqnum from ack");
+                        }
+                        if (ackSeqNum == packetToSend.getSeqNumShort()) {
+                            ackQueue.clear();
+                            currentState = State.WAITFORDATA;
+                            acked = true;
+                        }
+                    }
                 }
         }
     }
