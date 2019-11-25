@@ -38,9 +38,10 @@ public class Receiver implements Runnable {
                         if(recvPacket.getFrameType() == (byte) 32) {
                             System.out.println("Received Ack!");
                             ackQueue.put(recvPacket);
+                            System.out.println("Ackqueue size: " + ackQueue.size());
                         }else if(recvPacket.getDestShort() == -1){
                             System.out.println("Received Broadcast!");
-                        }else{
+
                             System.out.println("this packet's frame type: " + recvPacket.getFrameType());
                             //now that we have recieved a packet we need to acknowledge that we got it
                             int length = 2048;
@@ -51,11 +52,12 @@ public class Receiver implements Runnable {
                             String ackMsg = "Acknowledged";
                             byte[] msg = ackMsg.getBytes();
                             Packet ack1 = new Packet(recvPacket.getSrcShort(), localMac, msg);
-                            ack1.setFrameType((byte) 001);
+                            ack1.setFrameType((byte) 1);
                             //ack1.setSeqNum(recvPacket.getSeqNumShort());
                             ack1.setSeqNum((short) 1);
                             //ack1.setData(msg);
                             //ack1.setData(recvPacket.getData());
+                            sendQueue.put(ack1);
                             System.out.println("finished putting ack on the stack");
                         }
                 	} else {

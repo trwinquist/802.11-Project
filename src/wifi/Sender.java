@@ -17,21 +17,23 @@ public class Sender implements Runnable {
     //
     public void run() {
         while (true) {
+            Packet packet = null;
             try {
-                Packet packet = messageQueue.take();
+                packet = messageQueue.take();
+            } catch (Exception e) {
+                System.out.println("getting the packet from the queue failed");
+            }
                 System.out.println("took packet from the queue");
                 if (packet != null) {
                     sendData(packet);
                 }
-            } catch (Exception e) {
-                System.out.println("getting the packet from the queue failed");
-            }
+
 
         }
     }
 
     public enum State {
-        WAITFORDATA, WAITIFS, WAITIFSWITHBACKOFF, WAITFORTRANSMISSIONTOEND, TRANSMIT, WAITFORACK
+        WAITFORDATA, WAITIFS, WAITIFSWITHBACKOFF, WAITFORTRANSMISSIONTOEND, TRANSMIT, WAITFORACK, DONETRYINGTRANSMIT
     }
 
     ;
@@ -40,37 +42,54 @@ public class Sender implements Runnable {
     private void sendData(Packet packetToSend) {
         int backoffWindowSize = 0;
         int retransmissionAttemps = 0;
+        long startTime = theRF.clock();
+        long timeOut = startTime + 2000L;
+        boolean retrySend = true;
+        boolean acked = false;
+        currentState = State.WAITFORDATA;
+        while(retrySend == true && retransmissionAttemps <= theRF.dot11RetryLimit && acked == false){
+            System.out.println("Start Switch Statement, tranmission attempt: " + retransmissionAttemps);
+            System.out.println("sender ack queue size: " + ackQueue.size());
+
         switch (currentState) {
 
             case WAITFORDATA:
-                if (messageQueue.size() > 0) {
+                System.out.println("waitfordata");
                     if (theRF.inUse()) {
                         currentState = State.WAITFORTRANSMISSIONTOEND;
                     } else {
-                        if (packetToSend.getFrameType() == (byte) 1) {
+                        try {
+                            if (packetToSend.getFrameType() == (byte) 1) {
+                                System.out.println("waiting sifs to send ack");
+                                Thread.sleep(theRF.aSIFSTime);
 
-                            Thread.sleep(theRF.aSIFSTime);
-                        } else {
-                            Thread.sleep(theRF.aSIFSTime + 2 * theRF.aSlotTime);
+                            } else {
+                                Thread.sleep(theRF.aSIFSTime + 2 * theRF.aSlotTime);
+                            }
+                        } catch (Exception e) {
+                            System.out.println("something went wrong sleeping");
                         }
                         currentState = State.WAITIFS;
                     }
-                }
+                break;
 
             case WAITIFS:
+                System.out.println("waitifs");
                 if (theRF.inUse()) {
                     currentState = State.WAITFORTRANSMISSIONTOEND;
                 } else {
                     currentState = State.TRANSMIT;
                 }
-
+                break;
             case WAITFORTRANSMISSIONTOEND:
+                System.out.println("waitfortransmissiontoend");
                 while (theRF.inUse()) {
                 }
                 ;
                 currentState = State.WAITIFSWITHBACKOFF;
-
+                break;
             case WAITIFSWITHBACKOFF:
+                System.out.println("waitifswithbackoff");
                 if (packetToSend.getFrameType() == (byte) 1) {
                     try {
                         Thread.sleep(theRF.aSIFSTime);
@@ -95,31 +114,39 @@ public class Sender implements Runnable {
                     }
                     currentState = State.TRANSMIT;
                 }
+                break;
             case TRANSMIT:
+                System.out.println("Transmit");
                 theRF.transmit(packetToSend.getPacket());
-                currentState = State.WAITFORACK;
-            case WAITFORACK:
-                boolean acked = false;
-                long startTime = theRF.clock();
-                long timeOut = startTime + 20L;
-                short ackSeqNum = 0;
-                while (acked == false) {
-                    if (theRF.clock() >= timeOut) {
-                        currentState = State.TRANSMIT;
-                    }
-                    if (ackQueue.size() == 1) {
-                        try{
-                            ackSeqNum = ackQueue.take().getSeqNumShort();
-                        } catch ( Exception e) {
-                            System.out.println("something went wrong getting seqnum from ack");
-                        }
-                        if (ackSeqNum == packetToSend.getSeqNumShort()) {
-                            ackQueue.clear();
-                            currentState = State.WAITFORDATA;
-                            acked = true;
-                        }
-                    }
+                System.out.println("Sent packet");
+                if(packetToSend.getFrameType() == (byte) 1){
+                    retrySend = false;
+                    break;
+                } else {
+                    currentState = State.WAITFORACK;
                 }
+            case WAITFORACK:
+                System.out.println("Waitforack");
+
+
+                short ackSeqNum = 0;
+                if (ackQueue.size() > 0) {
+                    System.out.println("sender sees the ack!");
+                    acked = true;
+                    ackQueue.clear();
+                } else if(retransmissionAttemps >= theRF.dot11RetryLimit){
+                        System.out.println("done trying to transmit");
+                        retrySend = false;
+                        break;
+                    } else if (theRF.clock() >= timeOut) {
+                        System.out.println("Timeout, retransmit");
+                        currentState = State.WAITFORDATA;
+                        System.out.println("go back to transmit");
+                        retransmissionAttemps ++;
+                    }
+
+                    break;
+        }
         }
     }
 }
