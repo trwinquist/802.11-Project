@@ -49,8 +49,8 @@ public class Receiver implements Runnable {
                             for(int i = 0; i < length;i++){
                                 data[i] = 0;
                             }
-                            String ackMsg = "Acknowledged";
-                            byte[] msg = ackMsg.getBytes();
+                            byte[] msg = new byte[1];
+                            msg[0] = 0;
                             Packet ack1 = new Packet(recvPacket.getSrcShort(), localMac, msg);
                             ack1.setFrameType((byte) 1);
                             //ack1.setSeqNum(recvPacket.getSeqNumShort());
