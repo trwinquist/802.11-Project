@@ -33,6 +33,7 @@ public class Sender implements Runnable {
     private State currentState;
     private void sendData (Packet packetToSend) {
         int backoffWindowSize = 0;
+        int retransmissionAttemps = 0;
         switch (currentState){
 
             case WAITFORDATA:
@@ -90,8 +91,17 @@ public class Sender implements Runnable {
             case TRANSMIT:
                 theRF.transmit(packetToSend.getPacket());
                 currentState = State.WAITFORACK;
+
             case WAITFORACK:
                 boolean acked = false;
+                long startTime = theRF.clock();
+                long timeOut = startTime + timeouttime
+                while(acked == false){
+                    if(ackQueue.size() == 1){
+                        ackQueue.
+                    }
+                    if (theRF.clock())
+                }
         }
     }
     /**
