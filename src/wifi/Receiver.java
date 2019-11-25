@@ -1,18 +1,22 @@
 package wifi;
 import java.util.*;
 import java.util.concurrent.*;
+
+import javax.swing.text.html.HTMLDocument.BlockElement;
+
 import rf.RF;
 
 public class Receiver implements Runnable {
     BlockingQueue<Packet> recvQueue;
     BlockingQueue<Packet> sendQueue;
+    BlockingQueue<Packet> ackQueue;
     RF theRF;
     short localMac;
 
-
-    public Receiver(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> sendQueue, short ourMac, RF theRF){
+    public Receiver(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> sendQueue, BlockingQueue<Packet> ackQueue, short ourMac, RF theRF){
         this.recvQueue = theQueue;
         this.sendQueue = sendQueue;
+        this.ackQueue = ackQueue;
         this.theRF = theRF;
         this.localMac = ourMac;
     }
@@ -29,14 +33,16 @@ public class Receiver implements Runnable {
                     //save dms and broadcasts to queue
                     if(recvPacket.getDestShort() == localMac || recvPacket.getDestShort() == -1) {
                         recvQueue.put(recvPacket);
-                        
+
                         //we want to make sure that we are not acknowledging acks and broadcasts. 
-                        if(recvPacket.getFrameType() == (byte) 32 || recvPacket.getDestShort() == -1){
-                            System.out.println("we received an acknowledgement or a broadcast, no ack back!");
+                        if(recvPacket.getFrameType() == (byte) 32) {
+                            System.out.println("Received Ack!");
+                            ackQueue.put(recvPacket);
+                        }else if(recvPacket.getDestShort() == -1){
+                            System.out.println("Received Broadcast!");
                         }else{
                             System.out.println("this packet's frame type: " + recvPacket.getFrameType());
                             //now that we have recieved a packet we need to acknowledge that we got it
-                            Thread.sleep(theRF.aSIFSTime);
                             int length = 2048;
                             byte[] data = new byte[length];
                             for(int i = 0; i < length;i++){
@@ -50,7 +56,6 @@ public class Receiver implements Runnable {
                             ack1.setSeqNum((short) 1);
                             //ack1.setData(msg);
                             //ack1.setData(recvPacket.getData());
-                            sendQueue.put(ack1);
                             System.out.println("finished putting ack on the stack");
                         }
                 	} else {

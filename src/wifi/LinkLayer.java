@@ -17,6 +17,7 @@ public class LinkLayer implements Dot11Interface
 	private PrintWriter output; // The output stream we'll write to
 	private BlockingQueue<Packet> recvQueue;
 	private BlockingQueue<Packet> sendQueue;
+	private BlockingQueue<Packet> ackQueue;
 
 	/**
 	 * Constructor takes a MAC address and the PrintWriter to which our output will
@@ -30,8 +31,9 @@ public class LinkLayer implements Dot11Interface
 		theRF = new RF(null, null);
 		sendQueue = new LinkedBlockingQueue(4);
 		recvQueue = new LinkedBlockingQueue(4);
+		ackQueue = new LinkedBlockingQueue(4);
 		Sender transmitter = new Sender(sendQueue, theRF);
-		Receiver getter = new Receiver(recvQueue, sendQueue, ourMAC, theRF);
+		Receiver getter = new Receiver(recvQueue, sendQueue, ackQueue, ourMAC, theRF);
 		(new Thread(transmitter)).start();
 		(new Thread(getter)).start();
 		output.println("LinkLayer: Constructor ran.");
