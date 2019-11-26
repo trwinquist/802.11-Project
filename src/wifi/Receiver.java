@@ -10,15 +10,17 @@ public class Receiver implements Runnable {
     BlockingQueue<Packet> recvQueue;
     BlockingQueue<Packet> sendQueue;
     BlockingQueue<Packet> ackQueue;
+    Hashtable<Short, Short> seqNums;
     RF theRF;
     short localMac;
 
-    public Receiver(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> sendQueue, BlockingQueue<Packet> ackQueue, short ourMac, RF theRF){
+    public Receiver(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> sendQueue, BlockingQueue<Packet> ackQueue, short ourMac, RF theRF, Hashtable<Short,Short> seqNums){
         this.recvQueue = theQueue;
         this.sendQueue = sendQueue;
         this.ackQueue = ackQueue;
         this.theRF = theRF;
         this.localMac = ourMac;
+        this.seqNums = seqNums;
     }
 
     //
@@ -26,35 +28,37 @@ public class Receiver implements Runnable {
         while(true) {
             try {
             	byte[] buffer = theRF.receive();
-                System.out.println("Received a packet");
+                //System.out.println("Received a packet");
                 if(buffer.length > 0) {
                     Packet recvPacket = new Packet(buffer);
-                    System.out.println("rec. packet dest: " + recvPacket.getDestShort());
+                   // System.out.println("rec. packet dest: " + recvPacket.getDestShort());
                     //save dms and broadcasts to queue
                     if(recvPacket.getDestShort() == localMac || recvPacket.getDestShort() == -1) {
                         recvQueue.put(recvPacket);
 
                         //we want to make sure that we are not acknowledging acks and broadcasts. 
                         if(recvPacket.getFrameType() == (byte) 32) {
-                            System.out.println("Received Ack!");
+                           // System.out.println("Received Ack!");
                             ackQueue.put(recvPacket);
-                            System.out.println("Ackqueue size: " + ackQueue.size());
-                        }else if(recvPacket.getDestShort() == -1){
-                            System.out.println("Received Broadcast!");
-
-                            System.out.println("this packet's frame type: " + recvPacket.getFrameType());
+                            //System.out.println("Ackqueue size: " + ackQueue.size());
+                        }else if(recvPacket.getDestShort() == -1) {
+                            //System.out.println("Received Broadcast!");
+                            if(recvPacket.getSeqNumShort() >= seqNums.get(recvPacket.getSrcShort()+1)){
+                                System.out.println("recieved an out of order packet.");
+                            }
+                           //System.out.println("this packet's frame type: " + recvPacket.getFrameType());
                             //now that we have recieved a packet we need to acknowledge that we got it
                             int length = 2048;
                             byte[] data = new byte[length];
                             for(int i = 0; i < length;i++){
                                 data[i] = 0;
                             }
-                            String ackMsg = "Acknowledged";
+                            String ackMsg = "";
                             byte[] msg = ackMsg.getBytes();
                             Packet ack1 = new Packet(recvPacket.getSrcShort(), localMac, msg);
                             ack1.setFrameType((byte) 1);
-                            //ack1.setSeqNum(recvPacket.getSeqNumShort());
-                            ack1.setSeqNum((short) 1);
+                            ack1.setSeqNum(recvPacket.getSeqNumShort());
+                            //ack1.setSeqNum((short) 1);
                             //ack1.setData(msg);
                             //ack1.setData(recvPacket.getData());
                             sendQueue.put(ack1);
