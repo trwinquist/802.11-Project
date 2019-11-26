@@ -1,5 +1,6 @@
 package wifi;
 import java.io.PrintWriter;
+import java.util.Hashtable;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -18,6 +19,7 @@ public class LinkLayer implements Dot11Interface
 	private BlockingQueue<Packet> recvQueue;
 	private BlockingQueue<Packet> sendQueue;
 	private BlockingQueue<Packet> ackQueue;
+	private Hashtable<Short, Short> seqNums;
 
 	/**
 	 * Constructor takes a MAC address and the PrintWriter to which our output will
@@ -32,8 +34,9 @@ public class LinkLayer implements Dot11Interface
 		sendQueue = new LinkedBlockingQueue(4);
 		recvQueue = new LinkedBlockingQueue(4);
 		ackQueue = new LinkedBlockingQueue(4);
-		Sender transmitter = new Sender(sendQueue, ackQueue, theRF);
-		Receiver getter = new Receiver(recvQueue, sendQueue, ackQueue, ourMAC, theRF);
+		seqNums = new Hashtable<Short, Short>();
+		Sender transmitter = new Sender(sendQueue, ackQueue, theRF, seqNums);
+		Receiver getter = new Receiver(recvQueue, sendQueue, ackQueue, ourMAC, theRF, seqNums);
 		(new Thread(transmitter)).start();
 		(new Thread(getter)).start();
 		output.println("LinkLayer: Constructor ran.");
@@ -46,6 +49,13 @@ public class LinkLayer implements Dot11Interface
 	public int send(short dest, byte[] data, int len) {
 		output.println("LinkLayer: Sending "+len+" bytes to "+dest);
 		Packet packet = new Packet(dest, ourMAC, data);
+		if(seqNums.containsKey(dest)){
+			seqNums.put(dest, (short) (seqNums.get(dest)+1));
+
+		} else {
+			seqNums.put(dest,(short) 0);
+		}
+		packet.setSeqNum(seqNums.get(dest));
 		try {
 			sendQueue.put(packet);
 		} catch (Exception e){
