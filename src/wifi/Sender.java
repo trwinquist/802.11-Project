@@ -130,7 +130,6 @@ public class Sender implements Runnable {
             case WAITFORACK:
                // System.out.println("Waitforack");
                 if (ackQueue.size() > 0) {
-                   // System.out.println("sender sees the ack!");
                     acked = true;
                     ackQueue.clear();
                 } else if(retransmissionAttemps >= theRF.dot11RetryLimit){
@@ -145,7 +144,7 @@ public class Sender implements Runnable {
                     }
 
                     break;
-        }
+            }
         }
     }
 }

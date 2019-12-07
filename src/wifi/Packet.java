@@ -47,6 +47,7 @@ public class Packet{
     public Packet(byte[] byteArray){
         myBytes = byteArray;
     }
+    
     //data.len = 2038 src.len = 2 dest.len = 2 seqNum.len = 2
     public Packet(byte[] seqNum, byte[] dest, byte[] src, byte[] data){
         this.myBytes = new byte[10+data.length];
@@ -87,8 +88,6 @@ public class Packet{
         //& first byte of CF with 00011111 to reset frame type
         myBytes[0] = typeByte;
         myBytes[0] = (byte)(myBytes[0] & (byte)31);
-        System.out.println("type byte debug 1 "+ ((byte)(typeByte << 5) | (byte) 0));
-        System.out.println("type byte debug 2 "+ (byte)(typeByte << 5));
         myBytes[0] = (byte)(myBytes[0] | (byte)(typeByte << 5));
     }
 
@@ -135,6 +134,7 @@ public class Packet{
     }
 
     public void setDest(byte[] newDest){
+        byte[] newEstDest = shortToBytes((short)788);
         myBytes[destIndex] = newDest[0];
         myBytes[destIndex+1] = newDest[1];
     }
@@ -201,16 +201,11 @@ public class Packet{
     }
 
     public short bytesToShort(byte b1, byte b2) {
-        int temp = b1 & 0xFF;
-        temp = temp << 8 | b2 & 0xFF;
-        return (short)temp;
+        return (short) (((b1 << 8)) | ((b2 & 0xff)));
     }
 
-    public byte[] shortToBytes(short x){
-        byte[] bytes = new byte[2];
-        bytes[1] = (byte) x;
-        bytes[0] = (byte) (x >> 8);
-        return bytes;
+    public byte[] shortToBytes(short s){
+        return new byte[] { (byte) ((s & 0xFF00) >> 8), (byte) (s & 0x00FF) };
     }
 
     public byte[] longToBytes(long x){
@@ -244,6 +239,30 @@ public class Packet{
         }
         return toString;
 
+    }
+
+    
+    public static void main(String[] args){
+        byte[] data = new byte[3];
+        byte[] src = new byte[2];
+        System.out.println("new default packet");
+        Packet packet = new Packet(src, src, src, data);
+        //tests
+        packet.setDest(new byte[] {1,1});
+        //System.out.println(packet.toString());
+        packet.setData(new byte[20]);
+        //System.out.println(packet.toString());
+        packet.setData("".getBytes());
+        //packet.setCRC();
+        System.out.println(packet.toString());  
+        //0000011000001001
+        packet.setSrc(new byte[]{6,9});
+        //System.out.println(packet.toString());  
+        packet.setSeqNum((short)80);
+        System.out.println(packet.toString());
+        packet.setFrameType((byte)1);
+        packet.setSeqNum(packet.getSeqNumShort());
+        System.out.println(packet.toString());
     }
 }
     
