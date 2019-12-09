@@ -34,7 +34,10 @@ public class Receiver implements Runnable {
                    // System.out.println("rec. packet dest: " + recvPacket.getDestShort());
                     //save dms and broadcasts to queue
                     if(recvPacket.getDestShort() == localMac || recvPacket.getDestShort() == -1) {
-                        recvQueue.put(recvPacket);
+                        // ignore any packets if we have more than 4 packets in our recvQueue.
+                        if(recvQueue.size() < 4) {
+                            recvQueue.put(recvPacket);
+                        }
                         //we want to make sure that we are not acknowledging acks and broadcasts. 
                         if(recvPacket.getFrameType() == (byte) 32) {
                             //acks
@@ -44,9 +47,14 @@ public class Receiver implements Runnable {
                         }else if(recvPacket.getDestShort() == localMac) {
                             //only respond to packets sent to us
                             System.out.println("Received message for us!");
-                            //if(recvPacket.getSeqNumShort() >= seqNums.get(recvPacket.getSrcShort()+1)){
+                            //if we are receiving a brand new packet from a new destination, we set that seq num to zero.
+                            if(!seqNums.containsKey(recvPacket.getSrcShort())){
+                                seqNums.put(recvPacket.getSrcShort(), (short) 0);
+                            }
+                            //check if the packet is out of order
+                            if(recvPacket.getSeqNumShort() >= seqNums.get(recvPacket.getSrcShort())+1){
                                 //System.out.println("recieved an out of order packet.");
-                            //}
+                            }
                             System.out.println("this packet's frame type: " + recvPacket.getFrameType());
                             //now that we have recieved a packet we need to acknowledge that we got it
                             int length = 2048;
