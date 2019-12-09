@@ -57,11 +57,17 @@ public class LinkLayer implements Dot11Interface
 		}
 		packet.setSeqNum(seqNums.get(dest));
 		try {
-			sendQueue.put(packet);
+			//only puts packet on the send queue if there aren't more that 4.
+			if( sendQueue.size() < 4) {
+				sendQueue.put(packet);
+			} else {
+				//return zero as per specification, as it didn't transmit .
+				len = 0;
+			}
 		} catch (Exception e){
 			System.out.println("something went wrong adding the packet to the sendQueue");
 		}
-		return len;
+			return len;
 	}
 
 	/**
