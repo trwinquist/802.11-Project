@@ -44,7 +44,7 @@ public class Receiver implements Runnable {
                             // System.out.println("Received Ack!");
                             ackQueue.put(recvPacket);
                             //System.out.println("Ackqueue size: " + ackQueue.size());
-                        }else if(recvPacket.getDestShort() == localMac) {
+                        }else if(recvPacket.getDestShort() == localMac && recvQueue.size() < 4) {
                             //only respond to packets sent to us
                             System.out.println("Received message for us!");
                             //if we are receiving a brand new packet from a new destination, we set that seq num to zero.
