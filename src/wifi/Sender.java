@@ -127,8 +127,10 @@ public class Sender implements Runnable {
                         break;
                     } else if (packetToSend.getFrameType() == (byte) 2) {
                         retrySend = false; //don't try to retry sending beacons because we won't receive an ack for these.
-                    } else if ( packetToSend.getSrcShort()==1 ) {
+                        break;
+                    } else if ( packetToSend.getDestShort()== (short) -1 ) {
                         retrySend = false; //don't try to resend broadcast messages. cuz we don't need to receive acks for these
+                        break;
                     } else {
                         //wait for acks
                         currentState = State.WAITFORACK;
