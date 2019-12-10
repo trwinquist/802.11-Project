@@ -38,7 +38,7 @@ public class Packet{
     private final int destIndex = 2;
     private final int srcIndex = 4;
     private final int dataIndex = 6;
-    //private Checksum crc;
+    private Checksum crc;
     private byte[] dumbCrc = new byte[]{(byte) 255, (byte) 255, (byte) 255, (byte) 255};
     public int crcIndex = 2044;
     public boolean isRetry;
@@ -46,6 +46,9 @@ public class Packet{
 
     public Packet(byte[] byteArray){
         myBytes = byteArray;
+        crcIndex = myBytes.length - 4;
+        crc = new CRC32();
+        setCRC();
     }
     
     //data.len = 2038 src.len = 2 dest.len = 2 seqNum.len = 2
@@ -54,9 +57,9 @@ public class Packet{
         setDest(dest);
         setSrc(src);
         setData(data);
-        //crc = new CRC32();
-        //setCRC();
-        setDumbCrc();
+        crc = new CRC32();
+        setCRC();
+        //setDumbCrc();
     }
 
     public Packet(short dest, short ourMac, byte[] data){
@@ -64,8 +67,8 @@ public class Packet{
         setDest(shortToBytes(dest));
         setSrc(shortToBytes(ourMac));
         setData(data);
-        //crc = new CRC32();
-        //setCRC();
+        crc = new CRC32();
+        setCRC();
         
     }
     
@@ -159,7 +162,7 @@ public class Packet{
         }
         return crc;
     }
-    /*
+    
     public void setCRC(){
         crc.update(myBytes, 0, myBytes.length);
         byte[] newCrc = longToBytes(crc.getValue());
@@ -167,7 +170,7 @@ public class Packet{
             myBytes[crcIndex+i] = newCrc[i];
         }
     }
-    */
+    
 
     public void setDumbCrc(){
         for(int i = 0; i < dumbCrc.length; i++){

@@ -73,6 +73,7 @@ public class Receiver implements Runnable {
 
             } catch (Exception e){
                 System.out.println("getting the packet from the queue failed");
+                System.out.println(e.toString());
             }
 
         }
