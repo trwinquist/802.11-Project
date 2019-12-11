@@ -74,9 +74,6 @@ public class LinkLayer implements Dot11Interface
 		packet.setSeqNum(seqNums.get(dest));
 		try {
 			//buffer length max length set status to error
-			if(){
-
-			}
 			sendQueue.put(packet);
 			//success
 			status = 1;
