@@ -38,7 +38,7 @@ public class Receiver implements Runnable {
                         //we want to make sure that we are not acknowledging acks and broadcasts. 
                         if(recvPacket.getFrameType() == (byte) 32) {
                             //acks
-                            // System.out.println("Received Ack!");
+                            System.out.println("Received Ack!");
                             ackQueue.put(recvPacket);
                             //System.out.println("Ackqueue size: " + ackQueue.size());
                         }else if(recvPacket.getDestShort() == localMac) {

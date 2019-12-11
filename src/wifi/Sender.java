@@ -9,7 +9,7 @@ public class Sender implements Runnable {
     Hashtable<Short, Short> seqNums;
     RF theRF;
 
-    public Sender(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> acks, RF theRF, Hashtable<Short, Short> seqNums) {
+    public Sender(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> acks, RF theRF, Hashtable<Short, Short> seqNums, Integer statusObj) {
         this.messageQueue = theQueue;
         this.ackQueue = acks;
         this.theRF = theRF;
