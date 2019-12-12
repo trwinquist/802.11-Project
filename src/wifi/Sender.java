@@ -8,12 +8,14 @@ public class Sender implements Runnable {
     BlockingQueue<Packet> ackQueue;
     Hashtable<Short, Short> seqNums;
     RF theRF;
+    Integer status;
 
     public Sender(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> acks, RF theRF, Hashtable<Short, Short> seqNums, Integer statusObj) {
         this.messageQueue = theQueue;
         this.ackQueue = acks;
         this.theRF = theRF;
         this.seqNums = seqNums;
+        this.status = statusObj;
     }
 
     //
@@ -146,6 +148,7 @@ public class Sender implements Runnable {
                         ackQueue.clear();
                     } else if(retransmissionAttemps >= theRF.dot11RetryLimit){
                         //System.out.println("done trying to transmit");
+                        status = 5;
                         retrySend = false;
                         break;
                     } else if (theRF.clock() >= timeOut) {
