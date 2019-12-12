@@ -155,7 +155,7 @@ public class Sender implements Runnable {
                         break;
                     } else if (theRF.clock() >= timeOut) {
                         //System.out.println("Timeout, retransmit");
-                        //packetToSend.setRetry();
+                        packetToSend.setRetry();
                         currentState = State.WAITFORDATA;
                         //System.out.println("go back to transmit");
                         //need to wait for the time that is we think it will take for an ack to return so we don't repeatedly check the theRF.clock().
