@@ -222,6 +222,14 @@ public class Packet{
         return new byte[] { (byte) ((s & 0xFF00) >> 8), (byte) (s & 0x00FF) };
     }
 
+    public long bytesToLong(byte[] by){
+        long value = 0;
+            for (int i = 0; i < by.length; i++){
+                value += ((long) by[i] & 0xffL) << (8 * i);
+        }  
+        return value; 
+    }
+
     public byte[] longToBytes(long x){
         byte[] bytes = new byte[4];
         for(int i = bytes.length-1; i >= 0; i--){
