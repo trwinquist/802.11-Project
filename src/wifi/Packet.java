@@ -71,6 +71,14 @@ public class Packet{
         setCRC();
         
     }
+
+    public Packet(short dest, short ourMac){
+        myBytes = new byte[10];
+        setDest(shortToBytes(dest));
+        setSrc(shortToBytes(ourMac));
+        crc = new CRC32();
+        setCRC();
+    }
     
     public byte[] getControlField(){
         byte[] controlField = new byte[controlFieldIndex];
@@ -97,6 +105,9 @@ public class Packet{
     public byte getRetry(){
         byte retry = getControlField()[0];
         return (byte) (retry & retryByte);
+    }
+    public void setRetry(){
+        myBytes[0] = (byte) (myBytes[0] & (byte) 16);
     }
 
     public short getSeqNumShort(){
