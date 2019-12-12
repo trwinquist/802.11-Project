@@ -19,6 +19,7 @@ public class Beacon implements Runnable{
         this.offset = off;
         this.interval = interval;
         this.localMac = localMac;
+        fudgeFactor = setFudge();
     }
 
     public void addToOffset(){
@@ -51,8 +52,18 @@ public class Beacon implements Runnable{
         } 
     }
 
+    public long setFudge(){
+        Packet timePacket = new Packet((byte)-1, localMac);
+        timePacket.setData(timePacket.longToBytes(theRF.clock()+fudgeFactor+offset));
+        timePacket.setFrameType((byte)2);
+        long startTime = theRF.clock();
+        for(int i = 0; i < 10; i++){
+            theRF.transmit(timePacket.getPacket());
+        }
+        return (theRF.clock() - startTime)/10;
+    }
+
     
     public static void main (String[]args){
-        //Beacon beacon = new Beacon(new Integer(0), interval, localMac)
     }
 }
