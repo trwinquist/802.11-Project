@@ -3,6 +3,7 @@ import java.io.PrintWriter;
 import java.util.Hashtable;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import rf.RF;
 
@@ -20,6 +21,12 @@ public class LinkLayer implements Dot11Interface
 	private BlockingQueue<Packet> sendQueue;
 	private BlockingQueue<Packet> ackQueue;
 	private Hashtable<Short, Short> seqNums;
+	private int debug = 1;
+	public AtomicBoolean maxCW;
+	private Sender transmitter;
+	private Receiver getter;
+	private Beacon lighthouse;
+	
 	private int status;
 
 	/**
@@ -30,6 +37,9 @@ public class LinkLayer implements Dot11Interface
 	 */
 	public LinkLayer(short ourMAC, PrintWriter output) {
 		this.ourMAC = ourMAC;
+		this.output = output; 
+		this.maxCW.set(false);
+		theRF = new RF(null, null);
 		this.output = output;
 		try {
 			theRF = new RF(null, null);
@@ -45,10 +55,12 @@ public class LinkLayer implements Dot11Interface
 		ackQueue = new LinkedBlockingQueue(4);
 		Integer statusObj = new Integer(status);
 		seqNums = new Hashtable<Short, Short>();
-		Sender transmitter = new Sender(sendQueue, ackQueue, theRF, seqNums, statusObj);
-		Receiver getter = new Receiver(recvQueue, sendQueue, ackQueue, ourMAC, theRF, seqNums);
+		transmitter = new Sender(sendQueue, ackQueue, theRF, seqNums, statusObj, maxCW);
+		getter = new Receiver(recvQueue, sendQueue, ackQueue, ourMAC, theRF, seqNums);
+		lighthouse = new Beacon(0, 7000, ourMAC, theRF);
 		(new Thread(transmitter)).start();
 		(new Thread(getter)).start();
+		(new Thread(lighthouse)).start();
 		output.println("LinkLayer: Constructor ran.");
 	}
 
@@ -137,14 +149,68 @@ public class LinkLayer implements Dot11Interface
 	}
 
 	/**
-	 * Passes command info to your link layer.  See docs for full description.
+	 * Passes command info to your link layer.
+	 * @return a value.
 	 */
 	public int command(int cmd, int val) {
-	    if(cmd > 3 || cmd < 0){
-	        //illegal argument
-            status = 9;
-        }
-		output.println("LinkLayer: Sending command "+cmd+" with value "+val);
+		int bug;
+
+		switch (cmd) {
+		case 0:
+			this.output.println("-------------- Commands -----------------");
+			this.output.println("Command #0: Display commands and their settings.");
+			this.output.println("Command #1: Set debug level.  Currently at: " + this.debug
+					+ "\n Use 0 for full debug output, and any other number for none.");
+			this.output.println("Command #2: Set slot selection method.  Currently " + (this.maxCW.get() ? "max" : "random")
+					+ "\n Use 0 for random selection, and anything > 0 for max.");
+			this.output.println("Command #3: Set beacon interval.  Currently at " + this.lighthouse.getInterval()
+					+ " seconds" + "\n The value specifies seconds between the start of beacons, and a -1 disables beacons.");
+
+			this.output.println("-----------------------------------------");
+
+		case 1:
+			bug = this.debug;
+			this.debug = val;
+			this.output.println("Setting debug to: " + val);
+			return bug;
+
+		case 2:
+			if (val == 0) {
+				this.maxCW.set(true);
+			}
+			if (this.maxCW.get()) {
+				this.output.print("Using max collision window.");
+			} else
+				this.output.print("Using a random collision window.");
+
+		case 3:
+			if (val < 0) {
+				this.output.print("Frames will never be set.");
+				this.lighthouse.setInterval(3600);
+			} else {
+				this.output.print("Frames will be sent every " + val + " seconds.");
+				this.lighthouse.setInterval(val);
+			}
+
+			if (cmd > 3 || cmd < 0) {
+				// illegal argument
+				status = 9;
+				output.println("LinkLayer: Sending command " + cmd + " with value " + val);
+				return 0;
+			}
+
+		}
+
 		return 0;
+	}
+	
+	/**
+	 * 
+	 * @param printThis The string to print out.
+	 */
+	public void debugs(String printThis) {
+		if(this.debug == 0) {
+			this.output.print(printThis);
+		}
 	}
 }

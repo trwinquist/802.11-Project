@@ -37,7 +37,7 @@ public class Beacon implements Runnable{
     public void run() {
         //check interval, if -1 skip,
         while(true){
-            if(interval < -1){
+            if(interval > -1){
                 //else wait for interval
                 if(theRF.clock() >= sendTime){
                     //make new timepacket with calculated timestamp
