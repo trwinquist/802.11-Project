@@ -20,11 +20,8 @@ public class Beacon implements Runnable{
         this.offset = off;
         this.interval = interval;
         this.localMac = localMac;
-<<<<<<< HEAD
         this.ll = ll;
-=======
         fudgeFactor = setFudge();
->>>>>>> b92803416bb74396de399cfc27ac901f5cf3fa81
     }
 
     public void addToOffset(){

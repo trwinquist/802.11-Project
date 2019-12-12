@@ -14,21 +14,15 @@ public class Sender implements Runnable {
     Integer status;
     LinkLayer ll;
 
-<<<<<<< HEAD
-    public Sender(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> acks, RF theRF, Hashtable<Short, Short> seqNums, Integer statusObj, LinkLayer ll) {
-=======
-    public Sender(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> acks, RF theRF, Hashtable<Short, Short> seqNums, Integer statusObj, AtomicBoolean maxCW) {
->>>>>>> a5ef1d9ec8f32330f930ed53e26560783a9cde4f
+
+    public Sender(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> acks, RF theRF, Hashtable<Short, Short> seqNums, Integer statusObj, AtomicBoolean maxCW, LinkLayer ll) {
         this.messageQueue = theQueue;
         this.ackQueue = acks;
         this.theRF = theRF;
         this.seqNums = seqNums;
         this.status = statusObj;
-<<<<<<< HEAD
         this.ll = ll;
-=======
         this.maxCW = maxCW;
->>>>>>> a5ef1d9ec8f32330f930ed53e26560783a9cde4f
     }
 
     //
@@ -74,15 +68,9 @@ public class Sender implements Runnable {
         boolean retrySend = true;
         boolean acked = false;
         currentState = State.WAITFORDATA;
-<<<<<<< HEAD
-        while(retrySend == true && retransmissionAttemps <= theRF.dot11RetryLimit && acked == false){
-            ll.debugs("Start Switch Statement, tranmission attempt: " + retransmissionAttemps);
-            ll.debugs("sender ack queue size: " + ackQueue.size());
-=======
         while(retrySend == true && retransmissionAttempts <= theRF.dot11RetryLimit && acked == false){
-            //System.out.println("Start Switch Statement, transmission attempt: " + retransmissionAttempts);
-            //System.out.println("sender ack queue size: " + ackQueue.size());
->>>>>>> a5ef1d9ec8f32330f930ed53e26560783a9cde4f
+            ll.debugs("Start Switch Statement, tranmission attempt: " + retransmissionAttempts);
+            ll.debugs("sender ack queue size: " + ackQueue.size());
 
             switch (currentState) {
 
@@ -182,19 +170,12 @@ public class Sender implements Runnable {
                         retrySend = false;
                         break;
                     } else if (theRF.clock() >= timeOut) {
-<<<<<<< HEAD
                         ll.debugs("Timeout, retransmit");
+						packetToSend.setRetry();
                         currentState = State.WAITFORDATA;
                         ll.debugs("go back to transmit");
-                        retransmissionAttemps ++;
-=======
-                        //System.out.println("Timeout, retransmit");
-                        packetToSend.setRetry();
-                        currentState = State.WAITFORDATA;
-                        //System.out.println("go back to transmit");
-                        //need to wait for the time that is we think it will take for an ack to return so we don't repeatedly check the theRF.clock().
                         retransmissionAttempts ++;
->>>>>>> a5ef1d9ec8f32330f930ed53e26560783a9cde4f
+
                     }
 
                     break;
