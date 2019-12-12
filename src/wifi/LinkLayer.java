@@ -20,13 +20,10 @@ public class LinkLayer implements Dot11Interface
 	private BlockingQueue<Packet> sendQueue;
 	private BlockingQueue<Packet> ackQueue;
 	private Hashtable<Short, Short> seqNums;
-<<<<<<< HEAD
-	private int debug;
+	private int debug = 1;
 	public boolean maxCW;
 	
-=======
 	private int status;
->>>>>>> ef43a5bf1eb406c22796601eb73387c58a237382
 
 	/**
 	 * Constructor takes a MAC address and the PrintWriter to which our output will
@@ -36,11 +33,9 @@ public class LinkLayer implements Dot11Interface
 	 */
 	public LinkLayer(short ourMAC, PrintWriter output) {
 		this.ourMAC = ourMAC;
-<<<<<<< HEAD
 		this.output = output; 
 		this.maxCW = false;
 		theRF = new RF(null, null);
-=======
 		this.output = output;
 		try {
 			theRF = new RF(null, null);
@@ -51,7 +46,6 @@ public class LinkLayer implements Dot11Interface
 			status = 3;
 			System.out.println(e);
 		}
->>>>>>> ef43a5bf1eb406c22796601eb73387c58a237382
 		sendQueue = new LinkedBlockingQueue(4);
 		recvQueue = new LinkedBlockingQueue(4);
 		ackQueue = new LinkedBlockingQueue(4);
@@ -152,13 +146,12 @@ public class LinkLayer implements Dot11Interface
 		
 	    switch (cmd) {
 	    case 0:
-	        this.output.println("-------------- Commands and Settings -----------------");
-	        this.output.println("Cmd #0: Display command options and current settings");
-	        this.output.println("Cmd #1: Set debug level.  Currently at " + this.debug + 
-	            "\n        Use -1 for full debug output, 0 for no output");
-	        this.output.println("Cmd #2: Set slot selection method.  Currently " + (this.maxCW ? "max" : "random") + 
-	            "\n        Use 0 for random slot selection, any other value to use maxCW");
-	        this.output.println("Cmd #3: Set beacon interval.  Currently at " + this.theMAC.getBeaconInterval() + " seconds" + 
+	        this.output.println("-------------- Commands -----------------");
+	        this.output.println("Command #0: Display commands and their settings.");
+	        this.output.println("Command #1: Set debug level.  Currently at: " + this.debug +  "\n Use 0 for full debug output, and any other number for none.");
+	        this.output.println("Command #2: Set slot selection method.  Currently " + (this.maxCW ? "max" : "random") + 
+	            "\n        Use 0 for random selection, and anything > 0 for max.");
+	        this.output.println("Command #3: Set beacon interval.  Currently at " + this.theMAC.getBeaconInterval() + " seconds" + 
 	            "\n        Value specifies seconds between the start of beacons; -1 disables");
 
 	        
@@ -195,5 +188,14 @@ public class LinkLayer implements Dot11Interface
 	        
 	        
 	    }
+	}
+	/**
+	 * 
+	 * @param printThis The string to print out.
+	 */
+	public void debugs(String printThis) {
+		if(this.debug == 0) {
+			this.output.print(printThis);
+		}
 	}
 }
