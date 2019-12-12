@@ -20,6 +20,7 @@ public class LinkLayer implements Dot11Interface
 	private BlockingQueue<Packet> sendQueue;
 	private BlockingQueue<Packet> ackQueue;
 	private Hashtable<Short, Short> seqNums;
+	private int status;
 
 	/**
 	 * Constructor takes a MAC address and the PrintWriter to which our output will
@@ -29,13 +30,22 @@ public class LinkLayer implements Dot11Interface
 	 */
 	public LinkLayer(short ourMAC, PrintWriter output) {
 		this.ourMAC = ourMAC;
-		this.output = output;      
-		theRF = new RF(null, null);
+		this.output = output;
+		try {
+			theRF = new RF(null, null);
+			//rf initialization success
+			status = 1;
+		} catch (Exception e){
+			//RF_INIT_FAILED
+			status = 3;
+			System.out.println(e);
+		}
 		sendQueue = new LinkedBlockingQueue(4);
 		recvQueue = new LinkedBlockingQueue(4);
 		ackQueue = new LinkedBlockingQueue(4);
+		Integer statusObj = new Integer(status);
 		seqNums = new Hashtable<Short, Short>();
-		Sender transmitter = new Sender(sendQueue, ackQueue, theRF, seqNums);
+		Sender transmitter = new Sender(sendQueue, ackQueue, theRF, seqNums, statusObj);
 		Receiver getter = new Receiver(recvQueue, sendQueue, ackQueue, ourMAC, theRF, seqNums);
 		(new Thread(transmitter)).start();
 		(new Thread(getter)).start();
@@ -48,7 +58,13 @@ public class LinkLayer implements Dot11Interface
 	 */
 	public int send(short dest, byte[] data, int len) {
 		output.println("LinkLayer: Sending "+len+" bytes to "+dest);
+		//bad argument status check
+		if(dest < -1 || len < -1){
+			//illegal arguments found
+			status = 9;
+		}
 		Packet packet = new Packet(dest, ourMAC, data);
+		//
 		if(seqNums.containsKey(dest)){
 			seqNums.put(dest, (short) (seqNums.get(dest)+1));
 
@@ -60,14 +76,19 @@ public class LinkLayer implements Dot11Interface
 			//only puts packet on the send queue if there aren't more that 4.
 			if( sendQueue.size() < 4) {
 				sendQueue.put(packet);
+				//successfully put packet on queue
+				status = 1;
 			} else {
 				//return zero as per specification, as it didn't transmit .
 				len = 0;
+				status = 10;
 			}
+
 		} catch (Exception e){
 			System.out.println("something went wrong adding the packet to the sendQueue");
+			status = 2;
 		}
-			return len;
+		return len;
 	}
 
 	/**
@@ -75,6 +96,11 @@ public class LinkLayer implements Dot11Interface
 	 * the Transmission object.  See docs for full description.
 	 */
 	public int recv(Transmission t) {
+	    if(t == null){
+	        //illegal argument
+	        status = 9;
+        }
+
         if (this.recvQueue.isEmpty()) {
             output.println("Receive is being blocked, waiting for data.");
         }
@@ -85,12 +111,19 @@ public class LinkLayer implements Dot11Interface
             t.setSourceAddr(p.getSrcShort());
             t.setDestAddr(p.getDestShort());
             t.setBuf(data);
+            status = 1;
+            //if we receive an ack
+			if(p.getFrameType() == (byte) 32) {
+				//last transmission was acknowledged
+				status = 4;
+				System.out.println(status());
+			}
             return data.length;
-
         } catch (InterruptedException e) {
-            System.err.println("Interrupted while dequeueing the incoming data!");
+            System.err.println("Interrupted while de-queueing the incoming data!");
             e.printStackTrace();
-
+            //unspecified failure
+			status = 2;
             return -1;
         } 
 	}
@@ -100,13 +133,17 @@ public class LinkLayer implements Dot11Interface
 	 */
 	public int status() {
 		output.println("LinkLayer: Faking a status() return value of 0");
-		return 0;
+		return status;
 	}
 
 	/**
 	 * Passes command info to your link layer.  See docs for full description.
 	 */
 	public int command(int cmd, int val) {
+	    if(cmd > 3 || cmd < 0){
+	        //illegal argument
+            status = 9;
+        }
 		output.println("LinkLayer: Sending command "+cmd+" with value "+val);
 		return 0;
 	}
