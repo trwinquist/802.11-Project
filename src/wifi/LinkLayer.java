@@ -20,6 +20,9 @@ public class LinkLayer implements Dot11Interface
 	private BlockingQueue<Packet> sendQueue;
 	private BlockingQueue<Packet> ackQueue;
 	private Hashtable<Short, Short> seqNums;
+	private int debug;
+	public boolean maxCW;
+	
 
 	/**
 	 * Constructor takes a MAC address and the PrintWriter to which our output will
@@ -29,7 +32,8 @@ public class LinkLayer implements Dot11Interface
 	 */
 	public LinkLayer(short ourMAC, PrintWriter output) {
 		this.ourMAC = ourMAC;
-		this.output = output;      
+		this.output = output; 
+		this.maxCW = false;
 		theRF = new RF(null, null);
 		sendQueue = new LinkedBlockingQueue(4);
 		recvQueue = new LinkedBlockingQueue(4);
@@ -107,7 +111,56 @@ public class LinkLayer implements Dot11Interface
 	 * Passes command info to your link layer.  See docs for full description.
 	 */
 	public int command(int cmd, int val) {
-		output.println("LinkLayer: Sending command "+cmd+" with value "+val);
-		return 0;
+		Packet p;
+		Packet beacon;
+		int bug;
+		
+		
+		
+	    switch (cmd) {
+	    case 0:
+	        this.output.println("-------------- Commands and Settings -----------------");
+	        this.output.println("Cmd #0: Display command options and current settings");
+	        this.output.println("Cmd #1: Set debug level.  Currently at " + this.debug + 
+	            "\n        Use -1 for full debug output, 0 for no output");
+	        this.output.println("Cmd #2: Set slot selection method.  Currently " + (this.maxCW ? "max" : "random") + 
+	            "\n        Use 0 for random slot selection, any other value to use maxCW");
+	        this.output.println("Cmd #3: Set beacon interval.  Currently at " + this.theMAC.getBeaconInterval() + " seconds" + 
+	            "\n        Value specifies seconds between the start of beacons; -1 disables");
+
+	        
+	        this.output.println("------------------------------------------------------");
+	        
+	    case 1:
+	    	bug = this.debug;
+	    	this.debug = val;
+	    	this.output.println("Setting debug to: " + val);
+	    	return bug;
+	    
+	    case 2:
+	    	if(val != 0) {
+	    		this.maxCW = true;
+	    	}
+	    	if(this.maxCW) {
+	    		this.output.print("Using max collision window.");
+	    	} else this.output.print("Using a random collision window.");
+	    	
+	    case 3:
+	    	if(val < 0) {
+	    		this.output.print("Frames will never be set.");
+	    		//this.theMAC.setBeaconInterval(3600);
+	    	} else {
+	    		this.output.print("Frames will be sent every " + val + " seconds.");
+	    		//this.theMAC.setBeaconInterval(val);
+	    	}
+	    	
+	    	
+	    
+	        
+	        
+	        
+	        
+	        
+	    }
 	}
 }
