@@ -13,6 +13,7 @@ public class Receiver implements Runnable {
     Hashtable<Short, Short> seqNums;
     RF theRF;
     short localMac;
+    Integer offset;
 
     public Receiver(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> sendQueue, BlockingQueue<Packet> ackQueue, short ourMac, RF theRF, Hashtable<Short,Short> seqNums){
         this.recvQueue = theQueue;
@@ -40,7 +41,7 @@ public class Receiver implements Runnable {
                         }
                         //we want to make sure that we are not acknowledging acks and broadcasts. 
                         if(recvPacket.getFrameType() == (byte) 32) {
-                            //acks
+                            //acks or
                             System.out.println("Received Ack!");
                             ackQueue.put(recvPacket);
                             //System.out.println("Ackqueue size: " + ackQueue.size());
@@ -74,7 +75,12 @@ public class Receiver implements Runnable {
                             sendQueue.put(ack1);
                             //System.out.println("finished putting ack on the stack");
                         }
-                	} else {
+                    } else if(recvPacket.getFrameType() == (byte)2){
+                        if(recvPacket.bytesToLong(recvPacket.getData()) > this.theRF.clock()+offset){
+                            this.offset = (int) (recvPacket.bytesToLong(recvPacket.getData()) - theRF.clock());
+                        }
+                    }
+                    else{
                 		System.out.println("Received a packet meant for " + recvPacket.getDestShort());
                 	}
                 }
