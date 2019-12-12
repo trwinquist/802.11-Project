@@ -65,7 +65,7 @@ public class LinkLayer implements Dot11Interface
 	public int send(short dest, byte[] data, int len) {
 		output.println("LinkLayer: Sending "+len+" bytes to "+dest);
 		//bad argument status check
-		if(dest < 0 || len < 0){
+		if(dest < -1 || len < -1){
 			//illegal arguments found
 			status = 9;
 		}
@@ -82,16 +82,19 @@ public class LinkLayer implements Dot11Interface
 			//only puts packet on the send queue if there aren't more that 4.
 			if( sendQueue.size() < 4) {
 				sendQueue.put(packet);
+				//successfully put packet on queue
+				status = 1;
 			} else {
 				//return zero as per specification, as it didn't transmit .
 				len = 0;
+				status = 10;
 			}
 
 		} catch (Exception e){
 			System.out.println("something went wrong adding the packet to the sendQueue");
 			status = 2;
 		}
-			return len;
+		return len;
 	}
 
 	/**
@@ -99,6 +102,11 @@ public class LinkLayer implements Dot11Interface
 	 * the Transmission object.  See docs for full description.
 	 */
 	public int recv(Transmission t) {
+	    if(t == null){
+	        //illegal argument
+	        status = 9;
+        }
+
         if (this.recvQueue.isEmpty()) {
             output.println("Receive is being blocked, waiting for data.");
         }
@@ -110,7 +118,7 @@ public class LinkLayer implements Dot11Interface
             t.setDestAddr(p.getDestShort());
             t.setBuf(data);
             status = 1;
-            //if we recieve an ack
+            //if we receive an ack
 			if(p.getFrameType() == (byte) 32) {
 				//last transmission was acknowledged
 				status = 4;
@@ -118,9 +126,9 @@ public class LinkLayer implements Dot11Interface
 			}
             return data.length;
         } catch (InterruptedException e) {
-            System.err.println("Interrupted while dequeueing the incoming data!");
+            System.err.println("Interrupted while de-queueing the incoming data!");
             e.printStackTrace();
-            //unspecified failiure
+            //unspecified failure
 			status = 2;
             return -1;
         } 
@@ -138,6 +146,7 @@ public class LinkLayer implements Dot11Interface
 	 * Passes command info to your link layer.  See docs for full description.
 	 */
 	public int command(int cmd, int val) {
+<<<<<<< HEAD
 		Packet p;
 		Packet beacon;
 		int bug;
@@ -197,5 +206,13 @@ public class LinkLayer implements Dot11Interface
 		if(this.debug == 0) {
 			this.output.print(printThis);
 		}
+=======
+	    if(cmd > 3 || cmd < 0){
+	        //illegal argument
+            status = 9;
+        }
+		output.println("LinkLayer: Sending command "+cmd+" with value "+val);
+		return 0;
+>>>>>>> 9e28eefa2d412174a0b526c78d23677026d8388d
 	}
 }
