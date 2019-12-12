@@ -55,9 +55,9 @@ public class LinkLayer implements Dot11Interface
 		ackQueue = new LinkedBlockingQueue(4);
 		Integer statusObj = new Integer(status);
 		seqNums = new Hashtable<Short, Short>();
-		transmitter = new Sender(sendQueue, ackQueue, theRF, seqNums, statusObj, maxCW);
-		getter = new Receiver(recvQueue, sendQueue, ackQueue, ourMAC, theRF, seqNums);
-		lighthouse = new Beacon(0, 7000, ourMAC, theRF);
+		transmitter = new Sender(sendQueue, ackQueue, theRF, seqNums, statusObj, maxCW, this);
+		getter = new Receiver(recvQueue, sendQueue, ackQueue, ourMAC, theRF, seqNums, this);
+		lighthouse = new Beacon(0, 7000, ourMAC, theRF, this);
 		(new Thread(transmitter)).start();
 		(new Thread(getter)).start();
 		(new Thread(lighthouse)).start();

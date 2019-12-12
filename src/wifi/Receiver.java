@@ -13,14 +13,16 @@ public class Receiver implements Runnable {
     Hashtable<Short, Short> seqNums;
     RF theRF;
     short localMac;
+    LinkLayer ll;
 
-    public Receiver(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> sendQueue, BlockingQueue<Packet> ackQueue, short ourMac, RF theRF, Hashtable<Short,Short> seqNums){
+    public Receiver(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> sendQueue, BlockingQueue<Packet> ackQueue, short ourMac, RF theRF, Hashtable<Short,Short> seqNums, LinkLayer ll){
         this.recvQueue = theQueue;
         this.sendQueue = sendQueue;
         this.ackQueue = ackQueue;
         this.theRF = theRF;
         this.localMac = ourMac;
         this.seqNums = seqNums;
+        this.ll = ll;
     }
 
     //
@@ -28,9 +30,10 @@ public class Receiver implements Runnable {
         while(true) {
             try {
             	byte[] buffer = theRF.receive();
-                //System.out.println("Received a packet");
+                ll.debugs("Received a packet");
                 if(buffer.length > 0) {
                     Packet recvPacket = new Packet(buffer);
+                    ll.debugs("Received packet destination: " + recvPacket.getDestShort());
                    // System.out.println("rec. packet dest: " + recvPacket.getDestShort());
                     //save dms and broadcasts to queue
                     if(recvPacket.getDestShort() == localMac || recvPacket.getDestShort() == -1) {
@@ -41,12 +44,12 @@ public class Receiver implements Runnable {
                         //we want to make sure that we are not acknowledging acks and broadcasts. 
                         if(recvPacket.getFrameType() == (byte) 32) {
                             //acks
-                            System.out.println("Received Ack!");
+                            ll.debugs("Received Ack from: " + recvPacket.getSrcShort());
                             ackQueue.put(recvPacket);
                             //System.out.println("Ackqueue size: " + ackQueue.size());
                         }else if(recvPacket.getDestShort() == localMac && recvQueue.size() < 4) {
                             //only respond to packets sent to us
-                            System.out.println("Received message for us!");
+                            ll.debugs("Received message for us: " + recvPacket.getDestShort());
                             //if we are receiving a brand new packet from a new destination, we set that seq num to zero.
                             if(!seqNums.containsKey(recvPacket.getSrcShort())){
                                 seqNums.put(recvPacket.getSrcShort(), (short) 0);
@@ -55,7 +58,7 @@ public class Receiver implements Runnable {
                             if(recvPacket.getSeqNumShort() >= seqNums.get(recvPacket.getSrcShort())+1){
                                 //System.out.println("recieved an out of order packet.");
                             }
-                            System.out.println("this packet's frame type: " + recvPacket.getFrameType());
+                            ll.debugs("this packet's frame type: " + recvPacket.getFrameType());
                             //now that we have recieved a packet we need to acknowledge that we got it
                             int length = 2048;
                             byte[] data = new byte[length];
@@ -70,18 +73,18 @@ public class Receiver implements Runnable {
                             //ack1.setSeqNum((short) 1);
                             //ack1.setData(msg);
                             //ack1.setData(recvPacket.getData());
-                            //System.out.println("about to put ack on send queue stack");
+                            ll.debugs("about to put ack on send queue stack");
                             sendQueue.put(ack1);
-                            //System.out.println("finished putting ack on the stack");
+                            ll.debugs("finished putting ack on the stack");
                         }
                 	} else {
-                		System.out.println("Received a packet meant for " + recvPacket.getDestShort());
+                		ll.debugs("Received a packet meant for " + recvPacket.getDestShort());
                 	}
                 }
 
             } catch (Exception e){
-                System.out.println("getting the packet from the queue failed");
-                System.out.println(e.toString());
+               ll.debugs("getting the packet from the queue failed");
+                ll.debugs(e.toString());
             }
 
         }

@@ -11,14 +11,16 @@ public class Beacon implements Runnable{
     int interval;
     int sendTime;
     short localMac;
+    LinkLayer ll;
 
 
 
-    public Beacon(Integer off, int interval, short localMac, RF rf){
+    public Beacon(Integer off, int interval, short localMac, RF rf, LinkLayer ll){
         theRF = rf;
         this.offset = off;
         this.interval = interval;
         this.localMac = localMac;
+        this.ll = ll;
     }
 
     public void addToOffset(){
@@ -27,6 +29,7 @@ public class Beacon implements Runnable{
 
     public void setInterval(int interval){
         this.interval = interval;
+        ll.debugs("Set beacon interval to " + interval);
     }
 
     public int getInterval(){
