@@ -1,21 +1,25 @@
 package wifi;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import rf.RF;
 
 public class Sender implements Runnable {
     BlockingQueue<Packet> messageQueue;
     BlockingQueue<Packet> ackQueue;
     Hashtable<Short, Short> seqNums;
+    AtomicBoolean maxCW;
     RF theRF;
     Integer status;
 
-    public Sender(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> acks, RF theRF, Hashtable<Short, Short> seqNums, Integer statusObj) {
+    public Sender(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> acks, RF theRF, Hashtable<Short, Short> seqNums, Integer statusObj, AtomicBoolean maxCW) {
         this.messageQueue = theQueue;
         this.ackQueue = acks;
         this.theRF = theRF;
         this.seqNums = seqNums;
         this.status = statusObj;
+        this.maxCW = maxCW;
     }
 
     //
@@ -43,16 +47,26 @@ public class Sender implements Runnable {
     ;
     private State currentState;
 
+
+    private int collisionWindow(){
+        if( maxCW.get() == true ) {
+            return theRF.aCWmax;
+        }
+        else {
+            return new Random().nextInt(theRF.aCWmax);
+        }
+    }
+
     private void sendData(Packet packetToSend) {
         int backoffWindowSize = 0;
-        int retransmissionAttemps = 0;
+        int retransmissionAttempts = 0;
         long startTime = theRF.clock();
         long timeOut = startTime + 20000L;
         boolean retrySend = true;
         boolean acked = false;
         currentState = State.WAITFORDATA;
-        while(retrySend == true && retransmissionAttemps <= theRF.dot11RetryLimit && acked == false){
-            //System.out.println("Start Switch Statement, tranmission attempt: " + retransmissionAttemps);
+        while(retrySend == true && retransmissionAttempts <= theRF.dot11RetryLimit && acked == false){
+            //System.out.println("Start Switch Statement, transmission attempt: " + retransmissionAttempts);
             //System.out.println("sender ack queue size: " + ackQueue.size());
 
             switch (currentState) {
@@ -73,7 +87,7 @@ public class Sender implements Runnable {
                             Thread.sleep(theRF.aSIFSTime);
 
                         } else {
-                            Thread.sleep(theRF.aSIFSTime + 2 * theRF.aSlotTime);
+                            Thread.sleep(theRF.aSIFSTime + 2 * theRF.aSlotTime * collisionWindow() );
                         }
                     } catch (Exception e) {
                         System.out.println("something went wrong sleeping");
@@ -102,7 +116,7 @@ public class Sender implements Runnable {
                         }
                     } else {
                         try {
-                            Thread.sleep(theRF.aSIFSTime + 2 * theRF.aSlotTime * retransmissionAttemps);
+                            Thread.sleep(theRF.aSIFSTime + 2 * theRF.aSlotTime * collisionWindow() * retransmissionAttempts);
                         } catch (Exception e) {
                             System.out.println("Something went wrong Sleeping");
                         }
@@ -112,7 +126,7 @@ public class Sender implements Runnable {
                         currentState = State.WAITFORTRANSMISSIONTOEND;
                     } else {
                         try {
-                            Thread.sleep((2 ^ backoffWindowSize*retransmissionAttemps) * theRF.aSlotTime);
+                            Thread.sleep((2 ^ backoffWindowSize*retransmissionAttempts) * theRF.aSlotTime * collisionWindow());
                         } catch (Exception e) {
                             System.out.println("Something went wrong Sleeping");
                         }
@@ -146,16 +160,18 @@ public class Sender implements Runnable {
                         // System.out.println("sender sees the ack!");
                         acked = true;
                         ackQueue.clear();
-                    } else if(retransmissionAttemps >= theRF.dot11RetryLimit){
+                    } else if(retransmissionAttempts >= theRF.dot11RetryLimit){
                         //System.out.println("done trying to transmit");
                         status = 5;
                         retrySend = false;
                         break;
                     } else if (theRF.clock() >= timeOut) {
                         //System.out.println("Timeout, retransmit");
+                        packetToSend.setRetry();
                         currentState = State.WAITFORDATA;
                         //System.out.println("go back to transmit");
-                        retransmissionAttemps ++;
+                        //need to wait for the time that is we think it will take for an ack to return so we don't repeatedly check the theRF.clock().
+                        retransmissionAttempts ++;
                     }
 
                     break;
