@@ -13,7 +13,11 @@ public class Receiver implements Runnable {
     Hashtable<Short, Short> seqNums;
     RF theRF;
     short localMac;
+<<<<<<< HEAD
     LinkLayer ll;
+=======
+    Integer offset;
+>>>>>>> a5ef1d9ec8f32330f930ed53e26560783a9cde4f
 
     public Receiver(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> sendQueue, BlockingQueue<Packet> ackQueue, short ourMac, RF theRF, Hashtable<Short,Short> seqNums, LinkLayer ll){
         this.recvQueue = theQueue;
@@ -43,8 +47,13 @@ public class Receiver implements Runnable {
                         }
                         //we want to make sure that we are not acknowledging acks and broadcasts. 
                         if(recvPacket.getFrameType() == (byte) 32) {
+<<<<<<< HEAD
                             //acks
                             ll.debugs("Received Ack from: " + recvPacket.getSrcShort());
+=======
+                            //acks or
+                            System.out.println("Received Ack!");
+>>>>>>> a5ef1d9ec8f32330f930ed53e26560783a9cde4f
                             ackQueue.put(recvPacket);
                             //System.out.println("Ackqueue size: " + ackQueue.size());
                         }else if(recvPacket.getDestShort() == localMac && recvQueue.size() < 4) {
@@ -77,8 +86,18 @@ public class Receiver implements Runnable {
                             sendQueue.put(ack1);
                             ll.debugs("finished putting ack on the stack");
                         }
+<<<<<<< HEAD
                 	} else {
                 		ll.debugs("Received a packet meant for " + recvPacket.getDestShort());
+=======
+                    } else if(recvPacket.getFrameType() == (byte)2){
+                        if(recvPacket.bytesToLong(recvPacket.getData()) > this.theRF.clock()+offset){
+                            this.offset = (int) (recvPacket.bytesToLong(recvPacket.getData()) - theRF.clock());
+                        }
+                    }
+                    else{
+                		System.out.println("Received a packet meant for " + recvPacket.getDestShort());
+>>>>>>> a5ef1d9ec8f32330f930ed53e26560783a9cde4f
                 	}
                 }
 
