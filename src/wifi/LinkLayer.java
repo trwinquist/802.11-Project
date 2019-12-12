@@ -146,12 +146,16 @@ public class LinkLayer implements Dot11Interface
 	 * Passes command info to your link layer.  See docs for full description.
 	 */
 	public int command(int cmd, int val) {
-<<<<<<< HEAD
 		Packet p;
 		Packet beacon;
 		int bug;
 		
-		
+	    if(cmd > 3 || cmd < 0){
+	        //illegal argument
+            status = 9;
+        }
+		output.println("LinkLayer: Sending command "+cmd+" with value "+val);
+		return 0;   
 		
 	    switch (cmd) {
 	    case 0:
@@ -189,8 +193,6 @@ public class LinkLayer implements Dot11Interface
 	    		//this.theMAC.setBeaconInterval(val);
 	    	}
 	    	
-	    	
-	    
 	        
 	        
 	        
@@ -198,6 +200,7 @@ public class LinkLayer implements Dot11Interface
 	        
 	    }
 	}
+	
 	/**
 	 * 
 	 * @param printThis The string to print out.
@@ -206,13 +209,5 @@ public class LinkLayer implements Dot11Interface
 		if(this.debug == 0) {
 			this.output.print(printThis);
 		}
-=======
-	    if(cmd > 3 || cmd < 0){
-	        //illegal argument
-            status = 9;
-        }
-		output.println("LinkLayer: Sending command "+cmd+" with value "+val);
-		return 0;
->>>>>>> 9e28eefa2d412174a0b526c78d23677026d8388d
 	}
 }

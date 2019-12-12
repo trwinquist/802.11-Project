@@ -70,9 +70,9 @@ public class Receiver implements Runnable {
                             //ack1.setSeqNum((short) 1);
                             //ack1.setData(msg);
                             //ack1.setData(recvPacket.getData());
-                            System.out.println("about to put ack on send queue stack");
+                            //System.out.println("about to put ack on send queue stack");
                             sendQueue.put(ack1);
-                            System.out.println("finished putting ack on the stack");
+                            //System.out.println("finished putting ack on the stack");
                         }
                 	} else {
                 		System.out.println("Received a packet meant for " + recvPacket.getDestShort());
@@ -81,6 +81,7 @@ public class Receiver implements Runnable {
 
             } catch (Exception e){
                 System.out.println("getting the packet from the queue failed");
+                System.out.println(e.toString());
             }
 
         }
