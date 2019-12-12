@@ -42,7 +42,8 @@ public class Beacon implements Runnable{
                 if(theRF.clock() >= sendTime){
                     //make new timepacket with calculated timestamp
                     Packet timePacket = new Packet((byte)-1, localMac);
-                    timePacket.setData(timePacket.longToBytes(theRF.clock()+fudgeFactor+(offset * 1000)));
+                    timePacket.setData(timePacket.longToBytes(theRF.clock()+fudgeFactor+offset));
+                    timePacket.setFrameType((byte)2);
                     //send new timepacket on theRF
                     theRF.transmit(timePacket.getPacket());
                 }
