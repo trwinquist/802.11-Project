@@ -1,21 +1,25 @@
 package wifi;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import rf.RF;
 
 public class Sender implements Runnable {
     BlockingQueue<Packet> messageQueue;
     BlockingQueue<Packet> ackQueue;
     Hashtable<Short, Short> seqNums;
+    AtomicBoolean maxCW;
     RF theRF;
     Integer status;
 
-    public Sender(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> acks, RF theRF, Hashtable<Short, Short> seqNums, Integer statusObj) {
+    public Sender(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> acks, RF theRF, Hashtable<Short, Short> seqNums, Integer statusObj, AtomicBoolean maxCW) {
         this.messageQueue = theQueue;
         this.ackQueue = acks;
         this.theRF = theRF;
         this.seqNums = seqNums;
         this.status = statusObj;
+        this.maxCW = maxCW;
     }
 
     //
@@ -44,6 +48,14 @@ public class Sender implements Runnable {
     private State currentState;
 
 
+    private int collisionWindow(){
+        if( maxCW.get() == true ) {
+            return theRF.aCWmax;
+        }
+        else {
+            return new Random().nextInt(theRF.aCWmax);
+        }
+    }
 
     private void sendData(Packet packetToSend) {
         int backoffWindowSize = 0;
@@ -75,7 +87,7 @@ public class Sender implements Runnable {
                             Thread.sleep(theRF.aSIFSTime);
 
                         } else {
-                            Thread.sleep(theRF.aSIFSTime + 2 * theRF.aSlotTime);
+                            Thread.sleep(theRF.aSIFSTime + 2 * theRF.aSlotTime * collisionWindow() );
                         }
                     } catch (Exception e) {
                         System.out.println("something went wrong sleeping");
@@ -104,7 +116,7 @@ public class Sender implements Runnable {
                         }
                     } else {
                         try {
-                            Thread.sleep(theRF.aSIFSTime + 2 * theRF.aSlotTime * retransmissionAttempts);
+                            Thread.sleep(theRF.aSIFSTime + 2 * theRF.aSlotTime * collisionWindow() * retransmissionAttempts);
                         } catch (Exception e) {
                             System.out.println("Something went wrong Sleeping");
                         }
@@ -114,7 +126,7 @@ public class Sender implements Runnable {
                         currentState = State.WAITFORTRANSMISSIONTOEND;
                     } else {
                         try {
-                            Thread.sleep((2 ^ backoffWindowSize*retransmissionAttempts) * theRF.aSlotTime);
+                            Thread.sleep((2 ^ backoffWindowSize*retransmissionAttempts) * theRF.aSlotTime * collisionWindow());
                         } catch (Exception e) {
                             System.out.println("Something went wrong Sleeping");
                         }
