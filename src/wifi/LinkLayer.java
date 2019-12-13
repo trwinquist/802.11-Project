@@ -22,7 +22,7 @@ public class LinkLayer implements Dot11Interface
 	private BlockingQueue<Packet> ackQueue;
 	private Hashtable<Short, Short> seqNums;
 	private int debug = 1;
-	public AtomicBoolean maxCW;
+	public AtomicBoolean maxCW = new AtomicBoolean();
 	private Sender transmitter;
 	private Receiver getter;
 	private Beacon lighthouse;
@@ -36,32 +36,45 @@ public class LinkLayer implements Dot11Interface
 	 * @param output  Output stream associated with GUI
 	 */
 	public LinkLayer(short ourMAC, PrintWriter output) {
+		System.out.println("called initialize link layer");
 		this.ourMAC = ourMAC;
-		this.output = output; 
-		this.maxCW.set(false);
-		theRF = new RF(null, null);
 		this.output = output;
+		this.maxCW.set(false);
+
+		theRF = new RF(null, null);
+
+		this.output = output;
+
 		try {
 			theRF = new RF(null, null);
 			//rf initialization success
+			System.out.println("successfully initialized the rF");
 			status = 1;
 		} catch (Exception e){
 			//RF_INIT_FAILED
 			status = 3;
+			System.out.println("failed to init link layer");
 			System.out.println(e);
 		}
+
 		sendQueue = new LinkedBlockingQueue(4);
 		recvQueue = new LinkedBlockingQueue(4);
 		ackQueue = new LinkedBlockingQueue(4);
-		Integer statusObj = new Integer(status);
+		Integer statusObj = status;
 		seqNums = new Hashtable<Short, Short>();
+
 		transmitter = new Sender(sendQueue, ackQueue, theRF, seqNums, statusObj, maxCW, this);
 		getter = new Receiver(recvQueue, sendQueue, ackQueue, ourMAC, theRF, seqNums, this);
+		System.out.println("ourmac: " + ourMAC);
+		System.out.println("theRF: " + theRF.toString());
+		System.out.println("this: " + this.toString());
 		lighthouse = new Beacon(0, 7000, ourMAC, theRF, this);
+		System.out.println("got this far");
 		(new Thread(transmitter)).start();
 		(new Thread(getter)).start();
 		(new Thread(lighthouse)).start();
 		debugs("LinkLayer: Constructor ran.");
+		System.out.println("Finished initializing link layer");
 	}
 
 	/**

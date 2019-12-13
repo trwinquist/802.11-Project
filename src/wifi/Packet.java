@@ -40,7 +40,7 @@ public class Packet{
     private final int dataIndex = 6;
     private Checksum crc;
     private byte[] dumbCrc = new byte[]{(byte) 255, (byte) 255, (byte) 255, (byte) 255};
-    public int crcIndex = 2044;
+    public int crcIndex = 6;
     public boolean isRetry;
     
 
@@ -56,9 +56,9 @@ public class Packet{
         this.myBytes = new byte[10+data.length];
         setDest(dest);
         setSrc(src);
-        setData(data);
         crc = new CRC32();
         setCRC();
+        setData(data);
         //setDumbCrc();
     }
 
@@ -66,10 +66,9 @@ public class Packet{
         myBytes = new byte[10+data.length];
         setDest(shortToBytes(dest));
         setSrc(shortToBytes(ourMac));
-        setData(data);
         crc = new CRC32();
         setCRC();
-        
+        setData(data);
     }
 
     public Packet(short dest, short ourMac){

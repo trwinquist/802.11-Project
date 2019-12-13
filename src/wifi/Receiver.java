@@ -24,12 +24,15 @@ public class Receiver implements Runnable {
         this.localMac = ourMac;
         this.seqNums = seqNums;
         this.ll = ll;
+        System.out.println("finished initializing the receiver");
     }
 
     //
     public void run(){
         while(true) {
+            System.out.println("runnning receiver");
             try {
+                System.out.println("in try");
             	byte[] buffer = theRF.receive();
                 ll.debugs("Received a packet");
                 if(buffer.length > 0) {

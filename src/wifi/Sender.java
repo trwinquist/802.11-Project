@@ -75,7 +75,7 @@ public class Sender implements Runnable {
             switch (currentState) {
 
                 case WAITFORDATA:
-                    //System.out.println("waitfordata");
+                    System.out.println("waitfordata");
                     if (theRF.inUse()) {
                         currentState = State.WAITFORTRANSMISSIONTOEND;
                     } else {
@@ -95,7 +95,7 @@ public class Sender implements Runnable {
                     } catch (Exception e) {
                         ll.debugs("something went wrong sleeping: 1");
                     }
-                    //System.out.println("waitifs");
+                    System.out.println("waitifs");
                     if (theRF.inUse()) {
                         currentState = State.WAITFORTRANSMISSIONTOEND;
                     } else {
@@ -103,14 +103,14 @@ public class Sender implements Runnable {
                     }
                     break;
                 case WAITFORTRANSMISSIONTOEND:
-                    //System.out.println("waitfortransmissiontoend");
+                    System.out.println("waitfortransmissiontoend");
                     while (theRF.inUse()) {
                     }
                     ;
                     currentState = State.WAITIFSWITHBACKOFF;
                     break;
                 case WAITIFSWITHBACKOFF:
-                    // System.out.println("waitifswithbackoff");
+                     System.out.println("waitifswithbackoff");
                     if (packetToSend.getFrameType() == (byte) 1) {
                         try {
                             Thread.sleep(theRF.aSIFSTime);
@@ -138,8 +138,10 @@ public class Sender implements Runnable {
                     break;
                 // transmit a frame then transition to waiting for the ack.
                 case TRANSMIT:
+                    System.out.println("TRansmitting");
                     ll.debugs("Transmit");
                     theRF.transmit(packetToSend.getPacket());
+                    System.out.println("sent packet!!!");
                     ll.debugs("Sent packet");
                     if(packetToSend.getFrameType() == (byte) 1){
                         retrySend = false; // don't try to resend acks,  just break.
@@ -158,7 +160,7 @@ public class Sender implements Runnable {
                 //wait for an ack
                 case WAITFORACK:
                 	ll.debugs("Waiting for ack");
-                    // System.out.println("Waitforack");
+                     System.out.println("Waitforack");
 
                     if (ackQueue.size() > 0) {
                         // System.out.println("sender sees the ack!");

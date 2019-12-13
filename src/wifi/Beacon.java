@@ -16,12 +16,25 @@ public class Beacon implements Runnable{
 
 
     public Beacon(Integer off, int interval, short localMac, RF rf, LinkLayer ll){
+        System.out.println("called beacon constructor");
         theRF = rf;
+        if(theRF == null){
+            System.out.println("rf is null");
+        }
         this.offset = off;
+        if(this.offset == null){
+            System.out.println("off is null");
+        }
         this.interval = interval;
         this.localMac = localMac;
+
         this.ll = ll;
+        if(this.ll == null){
+            System.out.println("LinkLayer is null");
+        }
+        System.out.println("got this far in the Beacon");
         fudgeFactor = setFudge();
+        System.out.println("finished initializing beacon thread");
     }
 
     public void addToOffset(){
