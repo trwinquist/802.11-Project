@@ -60,7 +60,7 @@ public class LinkLayer implements Dot11Interface
 		lighthouse = new Beacon(0, 7000, ourMAC, theRF);
 		(new Thread(transmitter)).start();
 		(new Thread(getter)).start();
-		(new Thread(lighthouse)).start();
+		//(new Thread(lighthouse)).start();
 		output.println("LinkLayer: Constructor ran.");
 	}
 
