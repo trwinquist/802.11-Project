@@ -12,13 +12,16 @@ public class Sender implements Runnable {
     AtomicBoolean maxCW;
     RF theRF;
     Integer status;
+    LinkLayer ll;
 
-    public Sender(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> acks, RF theRF, Hashtable<Short, Short> seqNums, Integer statusObj, AtomicBoolean maxCW) {
+
+    public Sender(BlockingQueue<Packet> theQueue, BlockingQueue<Packet> acks, RF theRF, Hashtable<Short, Short> seqNums, Integer statusObj, AtomicBoolean maxCW, LinkLayer ll) {
         this.messageQueue = theQueue;
         this.ackQueue = acks;
         this.theRF = theRF;
         this.seqNums = seqNums;
         this.status = statusObj;
+        this.ll = ll;
         this.maxCW = maxCW;
     }
 
@@ -29,9 +32,9 @@ public class Sender implements Runnable {
             try {
                 packet = messageQueue.take();
             } catch (Exception e) {
-                System.out.println("getting the packet from the queue failed");
+                ll.debugs("getting the packet from the queue failed");
             }
-            // System.out.println("took packet from the queue");
+            ll.debugs("Successfully took a packet from the queue");
             if (packet != null) {
                 sendData(packet);
             }
@@ -66,8 +69,8 @@ public class Sender implements Runnable {
         boolean acked = false;
         currentState = State.WAITFORDATA;
         while(retrySend == true && retransmissionAttempts <= theRF.dot11RetryLimit && acked == false){
-            //System.out.println("Start Switch Statement, transmission attempt: " + retransmissionAttempts);
-            //System.out.println("sender ack queue size: " + ackQueue.size());
+            ll.debugs("Start Switch Statement, tranmission attempt: " + retransmissionAttempts);
+            ll.debugs("sender ack queue size: " + ackQueue.size());
 
             switch (currentState) {
 
@@ -83,14 +86,14 @@ public class Sender implements Runnable {
                 case WAITIFS:
                     try {
                         if (packetToSend.getFrameType() == (byte) 1) {
-                            //System.out.println("waiting sifs to send ack");
+                            ll.debugs("waiting sifs to send ack");
                             Thread.sleep(theRF.aSIFSTime);
 
                         } else {
                             Thread.sleep(theRF.aSIFSTime + 2 * theRF.aSlotTime * collisionWindow() );
                         }
                     } catch (Exception e) {
-                        System.out.println("something went wrong sleeping");
+                        ll.debugs("something went wrong sleeping: 1");
                     }
                     //System.out.println("waitifs");
                     if (theRF.inUse()) {
@@ -112,13 +115,13 @@ public class Sender implements Runnable {
                         try {
                             Thread.sleep(theRF.aSIFSTime);
                         } catch (Exception e) {
-                            System.out.println("Something went wrong Sleeping");
+                            ll.debugs("Something went wrong Sleeping: 2");
                         }
                     } else {
                         try {
                             Thread.sleep(theRF.aSIFSTime + 2 * theRF.aSlotTime * collisionWindow() * retransmissionAttempts);
                         } catch (Exception e) {
-                            System.out.println("Something went wrong Sleeping");
+                            ll.debugs("Something went wrong Sleeping: 3");
                         }
                     }
                     if (theRF.inUse()) {
@@ -128,16 +131,16 @@ public class Sender implements Runnable {
                         try {
                             Thread.sleep((2 ^ backoffWindowSize*retransmissionAttempts) * theRF.aSlotTime * collisionWindow());
                         } catch (Exception e) {
-                            System.out.println("Something went wrong Sleeping");
+                            ll.debugs("Something went wrong Sleeping: 4");
                         }
                         currentState = State.TRANSMIT;
                     }
                     break;
                 // transmit a frame then transition to waiting for the ack.
                 case TRANSMIT:
-                    // System.out.println("Transmit");
+                    ll.debugs("Transmit");
                     theRF.transmit(packetToSend.getPacket());
-                    //System.out.println("Sent packet");
+                    ll.debugs("Sent packet");
                     if(packetToSend.getFrameType() == (byte) 1){
                         retrySend = false; // don't try to resend acks,  just break.
                         break;
@@ -154,6 +157,7 @@ public class Sender implements Runnable {
                     break;
                 //wait for an ack
                 case WAITFORACK:
+                	ll.debugs("Waiting for ack");
                     // System.out.println("Waitforack");
 
                     if (ackQueue.size() > 0) {
@@ -166,12 +170,12 @@ public class Sender implements Runnable {
                         retrySend = false;
                         break;
                     } else if (theRF.clock() >= timeOut) {
-                        //System.out.println("Timeout, retransmit");
-                        packetToSend.setRetry();
+                        ll.debugs("Timeout, retransmit");
+						packetToSend.setRetry();
                         currentState = State.WAITFORDATA;
-                        //System.out.println("go back to transmit");
-                        //need to wait for the time that is we think it will take for an ack to return so we don't repeatedly check the theRF.clock().
+                        ll.debugs("go back to transmit");
                         retransmissionAttempts ++;
+
                     }
 
                     break;

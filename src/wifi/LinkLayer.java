@@ -55,13 +55,14 @@ public class LinkLayer implements Dot11Interface
 		ackQueue = new LinkedBlockingQueue(4);
 		Integer statusObj = new Integer(status);
 		seqNums = new Hashtable<Short, Short>();
-		transmitter = new Sender(sendQueue, ackQueue, theRF, seqNums, statusObj, maxCW);
-		getter = new Receiver(recvQueue, sendQueue, ackQueue, ourMAC, theRF, seqNums);
-		lighthouse = new Beacon(0, 7000, ourMAC, theRF);
+		transmitter = new Sender(sendQueue, ackQueue, theRF, seqNums, statusObj, maxCW, this);
+		getter = new Receiver(recvQueue, sendQueue, ackQueue, ourMAC, theRF, seqNums, this);
+		lighthouse = new Beacon(0, 7000, ourMAC, theRF, this);
 		(new Thread(transmitter)).start();
 		(new Thread(getter)).start();
-		//(new Thread(lighthouse)).start();
-		output.println("LinkLayer: Constructor ran.");
+		(new Thread(lighthouse)).start();
+		debugs("LinkLayer: Constructor ran.");
+
 	}
 
 	/**
@@ -69,9 +70,10 @@ public class LinkLayer implements Dot11Interface
 	 * of bytes to send.  See docs for full description.
 	 */
 	public int send(short dest, byte[] data, int len) {
-		output.println("LinkLayer: Sending "+len+" bytes to "+dest);
+		debugs("LinkLayer: Sending "+len+" bytes to "+dest);
 		//bad argument status check
 		if(dest < -1 || len < -1){
+			debugs("Found illegal arguments: Dest: " + dest + " or len: " + len + " is less than -1");
 			//illegal arguments found
 			status = 9;
 		}
@@ -88,16 +90,18 @@ public class LinkLayer implements Dot11Interface
 			//only puts packet on the send queue if there aren't more that 4.
 			if( sendQueue.size() < 4) {
 				sendQueue.put(packet);
+				debugs("Successfully put packet on the queue.");
 				//successfully put packet on queue
 				status = 1;
 			} else {
+				debugs("We did not transmit, queue is full.");
 				//return zero as per specification, as it didn't transmit .
 				len = 0;
 				status = 10;
 			}
 
 		} catch (Exception e){
-			System.out.println("something went wrong adding the packet to the sendQueue");
+			debugs("something went wrong adding the packet to the sendQueue");
 			status = 2;
 		}
 		return len;
@@ -114,7 +118,7 @@ public class LinkLayer implements Dot11Interface
         }
 
         if (this.recvQueue.isEmpty()) {
-            output.println("Receive is being blocked, waiting for data.");
+            debugs("Receive is being blocked, waiting for data.");
         }
         
         try {
@@ -126,13 +130,14 @@ public class LinkLayer implements Dot11Interface
             status = 1;
             //if we receive an ack
 			if(p.getFrameType() == (byte) 32) {
+				debugs("Acknowledging last transmission");
 				//last transmission was acknowledged
 				status = 4;
 				System.out.println(status());
 			}
             return data.length;
         } catch (InterruptedException e) {
-            System.err.println("Interrupted while de-queueing the incoming data!");
+            debugs("Interrupted while de-queueing the incoming data!");
             e.printStackTrace();
             //unspecified failure
 			status = 2;
@@ -144,7 +149,7 @@ public class LinkLayer implements Dot11Interface
 	 * Returns a current status code.  See docs for full description.
 	 */
 	public int status() {
-		output.println("LinkLayer: Faking a status() return value of 0");
+		debugs("LinkLayer: Faking a status() return value of 0");
 		return status;
 	}
 
