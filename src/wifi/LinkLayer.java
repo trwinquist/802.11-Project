@@ -62,6 +62,7 @@ public class LinkLayer implements Dot11Interface
 		(new Thread(getter)).start();
 		(new Thread(lighthouse)).start();
 		debugs("LinkLayer: Constructor ran.");
+
 	}
 
 	/**
