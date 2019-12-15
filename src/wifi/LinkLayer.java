@@ -35,10 +35,17 @@ public class LinkLayer implements Dot11Interface
 	 * @param ourMAC  MAC address
 	 * @param output  Output stream associated with GUI
 	 */
-	public LinkLayer(short ourMAC, PrintWriter output) {
+	public LinkLayer(short ourMAC, PrintWriter out) {
+		debugs("helllo");
 		this.ourMAC = ourMAC;
+<<<<<<< HEAD
 		this.output = output; 
 		this.maxCW = new AtomicBoolean(false);
+=======
+		this.output = out; 
+		this.maxCW.set(false);
+		theRF = new RF(null, null);
+>>>>>>> 081ce7b050bfee24d0849a95ced36df3e4b3c632
 		try {
 			theRF = new RF(null, null);
 			//rf initialization success
@@ -110,7 +117,7 @@ public class LinkLayer implements Dot11Interface
 	 * the Transmission object.  See docs for full description.
 	 */
 	public int recv(Transmission t) {
-	    if(t == null){
+	    if(t.equals(null)){
 	        //illegal argument
 	        status = 9;
         }
@@ -158,14 +165,23 @@ public class LinkLayer implements Dot11Interface
 	public int command(int cmd, int val) {
 		int bug;
 		
+<<<<<<< HEAD
 		if (cmd > 3 || cmd < 0) {
 			// illegal argument
 			status = 9;
 			output.println("LinkLayer: Error: command " + cmd + " is either less than 0 or greater than 3.");
+=======
+
+		if (cmd > 3 || cmd < 0) {
+			// illegal argument
+			status = 9;
+			output.println("LinkLayer: Sending command " + cmd + " with value " + val);
+>>>>>>> 081ce7b050bfee24d0849a95ced36df3e4b3c632
 			return 0;
 		}
 
 		switch (cmd) {
+<<<<<<< HEAD
 			case 0:
 				this.output.println("-------------- Commands -----------------");
 				this.output.println("Command #0: Display commands and their settings.");
@@ -207,6 +223,45 @@ public class LinkLayer implements Dot11Interface
 					break;
 				}
 			}
+=======
+		case 0:
+			this.output.println("-------------- Commands -----------------");
+			this.output.println("Command #0: Display commands and their settings.");
+			this.output.println("Command #1: Set debug level.  Currently at: " + this.debug
+					+ "\n Use 0 for full debug output, and any other number for none.");
+			this.output.println("Command #2: Set slot selection method.  Currently " + (this.maxCW.get() ? "max" : "random")
+					+ "\n Use 0 for random selection, and anything > 0 for max.");
+			this.output.println("Command #3: Set beacon interval.  Currently at " + this.lighthouse.getInterval()
+					+ " seconds" + "\n The value specifies seconds between the start of beacons, and a -1 disables beacons.");
+
+			this.output.println("-----------------------------------------");
+
+		case 1:
+			bug = this.debug;
+			this.debug = val;
+			this.output.println("Setting debug to: " + val);
+			return bug;
+
+		case 2:
+			if (val == 0) {
+				this.maxCW.set(true);
+			}
+			if (this.maxCW.get()) {
+				this.output.println("Using max collision window.");
+			} else
+				this.output.println("Using a random collision window.");
+
+		case 3:
+			if (val < 0) {
+				this.output.println("Frames will never be set.");
+				this.lighthouse.setInterval(3600);
+			} else {
+				this.output.println("Frames will be sent every " + val + " seconds.");
+				this.lighthouse.setInterval(val);
+			}
+
+		}
+>>>>>>> 081ce7b050bfee24d0849a95ced36df3e4b3c632
 
 		return 0;
 	}
