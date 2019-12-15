@@ -15,20 +15,20 @@ public class Beacon implements Runnable{
 
 
 
-    public Beacon(Integer off, int interval, short localMac, RF rf, LinkLayer ll){
+    public Beacon(final Integer off, final int interval, final short localMac, final RF rf, final LinkLayer ll){
         theRF = rf;
         this.offset = off;
         this.interval = interval;
         this.localMac = localMac;
         this.ll = ll;
-        fudgeFactor = setFudge();
+        //fudgeFactor = setFudge();
     }
 
     public void addToOffset(){
         offset++;
     }
 
-    public void setInterval(int interval){
+    public void setInterval(final int interval){
         this.interval = interval;
         ll.debugs("Set beacon interval to " + interval);
     }
@@ -45,28 +45,46 @@ public class Beacon implements Runnable{
                 //else wait for interval
                 if(theRF.clock() >= sendTime){
                     //make new timepacket with calculated timestamp
-                    Packet timePacket = new Packet((byte)-1, localMac);
+                    final Packet timePacket = new Packet((byte)-1, localMac);
                     timePacket.setData(timePacket.longToBytes(theRF.clock()+fudgeFactor+offset));
                     timePacket.setFrameType((byte)2);
                     //send new timepacket on theRF
-                    theRF.transmit(timePacket.getPacket());
+                    if(!theRF.inUse()){
+                        theRF.transmit(timePacket.getPacket());
+                    }
+                    else{
+                        while(theRF.inUse());
+                        theRF.transmit(timePacket.getPacket());
+                    }
+                    resetSendTime();
                 }
             }
-        } 
+            try{
+                Thread.sleep((long)(interval)*1000);
+            }
+            catch(InterruptedException e){
+                ll.debugs(e.toString());
+            }
+            
+        }
     }
 
     public long setFudge(){
-        Packet timePacket = new Packet((byte)-1, localMac);
+        final Packet timePacket = new Packet((byte)-1, localMac);
         timePacket.setData(timePacket.longToBytes(theRF.clock()+fudgeFactor+offset));
         timePacket.setFrameType((byte)2);
-        long startTime = theRF.clock();
+        final long startTime = theRF.clock();
         for(int i = 0; i < 10; i++){
             theRF.transmit(timePacket.getPacket());
         }
         return (theRF.clock() - startTime)/10;
     }
 
+    public void resetSendTime(){
+        sendTime = sendTime + interval;
+    }
+
     
-    public static void main (String[]args){
+    public static void main (final String[]args){
     }
 }
