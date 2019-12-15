@@ -40,7 +40,7 @@ public class Packet{
     private final int dataIndex = 6;
     private Checksum crc;
     private byte[] dumbCrc = new byte[]{(byte) 255, (byte) 255, (byte) 255, (byte) 255};
-    public int crcIndex = 2044;
+    public int crcIndex = 6;
     public boolean isRetry;
     
 
@@ -56,9 +56,9 @@ public class Packet{
         this.myBytes = new byte[10+data.length];
         setDest(dest);
         setSrc(src);
-        setData(data);
         crc = new CRC32();
         setCRC();
+        setData(data);
         //setDumbCrc();
     }
 
@@ -66,10 +66,9 @@ public class Packet{
         myBytes = new byte[10+data.length];
         setDest(shortToBytes(dest));
         setSrc(shortToBytes(ourMac));
-        setData(data);
         crc = new CRC32();
         setCRC();
-        
+        setData(data); 
     }
 
     public Packet(short dest, short ourMac){
@@ -78,6 +77,8 @@ public class Packet{
         setSrc(shortToBytes(ourMac));
         crc = new CRC32();
         setCRC();
+        setData(new byte[]{});
+        
     }
     
     public byte[] getControlField(){
@@ -175,6 +176,7 @@ public class Packet{
     }
     
     public void setCRC(){
+        System.out.println("testo woot");
         crc.update(myBytes, 0, myBytes.length);
         byte[] newCrc = longToBytes(crc.getValue());
         for(int i = 0; i < 4; i++){
@@ -211,7 +213,7 @@ public class Packet{
         resetPacket(newMyBytes);
         //reset crcIndex
         crcIndex = myBytes.length - 4;
-        setDumbCrc();
+        setCRC();
     }
 
     public short bytesToShort(byte b1, byte b2) {
@@ -285,6 +287,11 @@ public class Packet{
         packet.setFrameType((byte)1);
         packet.setSeqNum(packet.getSeqNumShort());
         System.out.println(packet.toString());
+        Packet timePacket = new Packet((byte)-1, (short) 1);
+        timePacket.setData(new byte[]{6,9});
+        timePacket.setFrameType((byte)2);
+        timePacket.setRetry();
+        System.out.println(timePacket.toString());
     }
 }
     
