@@ -83,8 +83,6 @@ public class Sender implements Runnable {
                     //System.out.println("waitfordata");
                     if (theRF.inUse()) {
                         currentState = State.WAITFORTRANSMISSIONTOEND;
-                    } else if (retransmissionAttempts > 0){
-                        currentState = State.WAITIFSWITHBACKOFF;
                     } else {
                         currentState = State.WAITIFS;
                     }
