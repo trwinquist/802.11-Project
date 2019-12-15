@@ -22,7 +22,7 @@ public class LinkLayer implements Dot11Interface
 	private BlockingQueue<Packet> ackQueue;
 	private Hashtable<Short, Short> seqNums;
 	private int debug = 1;
-	public AtomicBoolean maxCW;
+	public AtomicBoolean maxCW = new AtomicBoolean();
 	private Sender transmitter;
 	private Receiver getter;
 	private Beacon lighthouse;

@@ -176,7 +176,7 @@ public class Packet{
     }
     
     public void setCRC(){
-        System.out.println("testo woot");
+        //System.out.println("testo woot");
         crc.update(myBytes, 0, myBytes.length);
         byte[] newCrc = longToBytes(crc.getValue());
         for(int i = 0; i < 4; i++){
@@ -292,6 +292,21 @@ public class Packet{
         timePacket.setFrameType((byte)2);
         timePacket.setRetry();
         System.out.println(timePacket.toString());
+        System.out.println(timePacket.getControlField());
+        System.out.println(timePacket.getFrameType());
+        System.out.println(timePacket.getRetry());
+        System.out.println(timePacket.getSeqNumShort());
+        System.out.println(timePacket.getSeqNum());
+        timePacket.setSeqNum((short)1);
+        System.out.println(timePacket.getPacket());
+        timePacket.resetPacket(timePacket.getPacket());
+        System.out.println(timePacket.getDest());
+        System.out.println(timePacket.getDestShort());
+        System.out.println(timePacket.getSrc());
+        System.out.println(timePacket.getSrcShort());
+        System.out.println(timePacket.getCRC());
+        timePacket.setCRC();
+        System.out.println();
     }
 }
     
