@@ -21,7 +21,7 @@ public class LinkLayer implements Dot11Interface
 	private BlockingQueue<Packet> sendQueue;
 	private BlockingQueue<Packet> ackQueue;
 	private Hashtable<Short, Short> seqNums;
-	private int debug = 1;
+	private int debug = 0;
 	public AtomicBoolean maxCW;
 	private Sender transmitter;
 	private Receiver getter;
@@ -38,9 +38,7 @@ public class LinkLayer implements Dot11Interface
 	public LinkLayer(short ourMAC, PrintWriter output) {
 		this.ourMAC = ourMAC;
 		this.output = output; 
-		this.maxCW.set(false);
-		theRF = new RF(null, null);
-		this.output = output;
+		this.maxCW = new AtomicBoolean(false);
 		try {
 			theRF = new RF(null, null);
 			//rf initialization success
@@ -61,7 +59,6 @@ public class LinkLayer implements Dot11Interface
 		(new Thread(transmitter)).start();
 		(new Thread(getter)).start();
 		(new Thread(lighthouse)).start();
-		debugs("LinkLayer: Constructor ran.");
 
 	}
 
@@ -71,6 +68,7 @@ public class LinkLayer implements Dot11Interface
 	 */
 	public int send(short dest, byte[] data, int len) {
 		debugs("LinkLayer: Sending "+len+" bytes to "+dest);
+
 		//bad argument status check
 		if(dest < -1 || len < -1){
 			debugs("Found illegal arguments: Dest: " + dest + " or len: " + len + " is less than -1");
@@ -112,7 +110,7 @@ public class LinkLayer implements Dot11Interface
 	 * the Transmission object.  See docs for full description.
 	 */
 	public int recv(Transmission t) {
-	    if(t == null){
+	    if(t.equals(null)){
 	        //illegal argument
 	        status = 9;
         }
@@ -149,7 +147,7 @@ public class LinkLayer implements Dot11Interface
 	 * Returns a current status code.  See docs for full description.
 	 */
 	public int status() {
-		debugs("LinkLayer: Faking a status() return value of 0");
+		debugs("Status is: " + status);
 		return status;
 	}
 
@@ -160,51 +158,55 @@ public class LinkLayer implements Dot11Interface
 	public int command(int cmd, int val) {
 		int bug;
 
-		switch (cmd) {
-		case 0:
-			this.output.println("-------------- Commands -----------------");
-			this.output.println("Command #0: Display commands and their settings.");
-			this.output.println("Command #1: Set debug level.  Currently at: " + this.debug
-					+ "\n Use 0 for full debug output, and any other number for none.");
-			this.output.println("Command #2: Set slot selection method.  Currently " + (this.maxCW.get() ? "max" : "random")
-					+ "\n Use 0 for random selection, and anything > 0 for max.");
-			this.output.println("Command #3: Set beacon interval.  Currently at " + this.lighthouse.getInterval()
-					+ " seconds" + "\n The value specifies seconds between the start of beacons, and a -1 disables beacons.");
-
-			this.output.println("-----------------------------------------");
-
-		case 1:
-			bug = this.debug;
-			this.debug = val;
-			this.output.println("Setting debug to: " + val);
-			return bug;
-
-		case 2:
-			if (val == 0) {
-				this.maxCW.set(true);
-			}
-			if (this.maxCW.get()) {
-				this.output.print("Using max collision window.");
-			} else
-				this.output.print("Using a random collision window.");
-
-		case 3:
-			if (val < 0) {
-				this.output.print("Frames will never be set.");
-				this.lighthouse.setInterval(3600);
-			} else {
-				this.output.print("Frames will be sent every " + val + " seconds.");
-				this.lighthouse.setInterval(val);
-			}
-
-			if (cmd > 3 || cmd < 0) {
-				// illegal argument
-				status = 9;
-				output.println("LinkLayer: Sending command " + cmd + " with value " + val);
-				return 0;
-			}
-
+		if (cmd > 3 || cmd < 0) {
+			// illegal argument
+			status = 9;
+			output.println("LinkLayer: Error: command " + cmd + " is either less than 0 or greater than 3.");
+			return -1;
 		}
+
+		switch (cmd) {
+			case 0:
+				this.output.println("-------------- Commands -----------------");
+				this.output.println("Command #0: Display commands and their settings.");
+				this.output.println("Command #1: Set debug level.  Currently at: " + this.debug
+						+ "\n Use 0 for full debug output, and any other number for none.");
+				this.output.println("Command #2: Set slot selection method.  Currently " + (this.maxCW.get() ? "max" : "random")
+						+ "\n Use 0 for random selection, and anything > 0 for max.");
+				this.output.println("Command #3: Set beacon interval.  Currently at " + this.lighthouse.getInterval()
+						+ " seconds" + "\n The value specifies seconds between the start of beacons, and a -1 disables beacons.");
+	
+				this.output.println("-----------------------------------------");
+				break;
+	
+			case 1:
+				bug = this.debug;
+				this.debug = val;
+				this.output.println("Setting debug to: " + val);
+				return bug;
+	
+			case 2:
+				if (val == 0) {
+					this.maxCW.set(true);
+				}
+				if (this.maxCW.get()) {
+					this.output.println("Using max collision window.");
+					break;
+				} else
+					this.output.println("Using a random collision window.");
+				break;
+	
+			case 3:
+				if (val < 0) {
+					this.output.println("Frames will never be set.");
+					this.lighthouse.setInterval(3600);
+					break;
+				} else {
+					this.output.println("Frames will be sent every " + val + " seconds.");
+					this.lighthouse.setInterval(val);
+					break;
+				}
+			}
 
 		return 0;
 	}
@@ -215,7 +217,7 @@ public class LinkLayer implements Dot11Interface
 	 */
 	public void debugs(String printThis) {
 		if(this.debug == 0) {
-			this.output.print(printThis);
+			this.output.println(printThis);
 		}
 	}
 }
