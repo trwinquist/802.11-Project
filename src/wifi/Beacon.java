@@ -37,7 +37,7 @@ public class Beacon implements Runnable{
         return this.interval;
     }
 
-    @Override
+//    @Override
     public void run() {
         //check interval, if -1 skip,
         while(true){

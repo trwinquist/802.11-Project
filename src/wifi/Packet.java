@@ -176,7 +176,10 @@ public class Packet{
     }
     
     public void setCRC(){
+<<<<<<< HEAD
         //System.out.println("testo woot");
+=======
+>>>>>>> dd57cd402c24c8ea5c2cc734a8c492c43ea3b4dd
         crc.update(myBytes, 0, myBytes.length);
         byte[] newCrc = longToBytes(crc.getValue());
         for(int i = 0; i < 4; i++){

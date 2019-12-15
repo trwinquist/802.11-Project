@@ -8,13 +8,13 @@ import java.io.PrintWriter;
 /**
  * This class acts as a thin layer between the GUI client code and the Java-based
  * 802.11~ layer.  (There's a similar layer that mediates between the Java GUI code
- * and a C++ implementation of the 802.11~ project.)  See {@link GUIClientInterface} 
+ * and a C++ implementation of the 802.11~ project.)  See {@link GUIClientInterface}
  * for full descriptions of these routines.
- * 
+ *
  * @author richards
  */
 
-public class JavaGUIAdapter implements GUIClientInterface 
+public class JavaGUIAdapter implements GUIClientInterface
 {
 	private static Dot11Interface theDot11Layer;
 	private static CircularByteBuffer cbb;
@@ -32,9 +32,9 @@ public class JavaGUIAdapter implements GUIClientInterface
 	/**
 	 * Create an instance of the 802.11~ layer.  It wraps a PrintWriter around a
 	 * BufferedReader that's wrapped around a CircularByteBuffer (whew!) so that
-	 * we can read the text that the 802.11~ layer writes to the stream and 
+	 * we can read the text that the 802.11~ layer writes to the stream and
 	 * display it in the GUI's window.
-	 * 
+	 *
 	 * @param MACaddr  The MAC address passed to the 802.11~ constructor.
 	 * @return Returns 0 on success, -1 if an error occurs.
 	 */
@@ -62,7 +62,7 @@ public class JavaGUIAdapter implements GUIClientInterface
 		// Create a Transmission object, and pass it to the recv() call
 		byte[] buf = new byte[2048];
 		Transmission t = new Transmission((short)0, (short)0, buf);
-		int result = theDot11Layer.recv(t); 
+		int result = theDot11Layer.recv(t);
 
 		// See if there was any data in the transmission
 		int dataLen = 0;
@@ -72,7 +72,7 @@ public class JavaGUIAdapter implements GUIClientInterface
 
 		// Build a byte array, fill it with the source address and data,
 		// and return the whole shebang.
-		byte[] data = new byte[dataLen + 2]; 
+		byte[] data = new byte[dataLen + 2];
 		data[0] = (byte) ((t.getSourceAddr() >>> 8) & 0xFF);
 		data[1] = (byte) (t.getSourceAddr() & 0xFF);
 		System.arraycopy(t.getBuf(), 0, data, 2, dataLen);
