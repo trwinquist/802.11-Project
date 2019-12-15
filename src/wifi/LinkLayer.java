@@ -58,7 +58,7 @@ public class LinkLayer implements Dot11Interface
 		lighthouse = new Beacon(0, 7000, ourMAC, theRF, this);
 		(new Thread(transmitter)).start();
 		(new Thread(getter)).start();
-		(new Thread(lighthouse)).start();
+//		(new Thread(lighthouse)).start();
 
 	}
 
@@ -199,11 +199,11 @@ public class LinkLayer implements Dot11Interface
 			case 3:
 				if (val < 0) {
 					this.output.println("Frames will never be set.");
-					this.lighthouse.setInterval(3600);
+					this.lighthouse.setInterval(3600000);
 					break;
 				} else {
 					this.output.println("Frames will be sent every " + val + " seconds.");
-					this.lighthouse.setInterval(val);
+					this.lighthouse.setInterval(val * 1000);
 					break;
 				}
 			}
