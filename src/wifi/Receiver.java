@@ -44,7 +44,7 @@ public class Receiver implements Runnable {
                             recvQueue.put(recvPacket);
                         }
                         //we want to make sure that we are not acknowledging acks and broadcasts. 
-                        if(recvPacket.getFrameType() == (byte) 32) {
+                        if(recvPacket.getFrameType() == (byte) 32 || recvPacket.getFrameType() == (byte) 1) {
                             //acks
                             ll.debugs("Received Ack from: " + recvPacket.getSrcShort());
                             ackQueue.put(recvPacket);
@@ -70,14 +70,20 @@ public class Receiver implements Runnable {
                             String ackMsg = "";
                             byte[] msg = ackMsg.getBytes();
                             Packet ack1 = new Packet(recvPacket.getSrcShort(), localMac, msg);
-                            ack1.setFrameType((byte) 1);
-                            ack1.setSeqNum(recvPacket.getSeqNumShort());
-                            //ack1.setSeqNum((short) 1);
-                            //ack1.setData(msg);
-                            //ack1.setData(recvPacket.getData());
+                            //ack1.setFrameType((byte) 1);
+                            ack1.setAck();
+                            ll.debugs("is ack1 an ack?" + (ack1.getFrameType() == 32));
+                            ack1.setCRC();
                             ll.debugs("about to put ack on send queue stack");
-                            sendQueue.put(ack1);
-                            ll.debugs("finished putting ack on the stack");
+                            while(theRF.inUse()){};
+                            try{
+                                Thread.sleep(theRF.aSIFSTime);
+                            } catch (Exception e){
+                                ll.debugs("problem sleeping sifs for ack");
+                            }
+                            theRF.transmit(ack1.myBytes);
+                            ll.debugs("sent Ack1");
+                           // ll.debugs("finished putting ack on the stack");
                         }
                     } else if(recvPacket.getFrameType() == (byte)2){
                         if(recvPacket.bytesToLong(recvPacket.getData()) > this.theRF.clock()+offset){

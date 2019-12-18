@@ -90,14 +90,9 @@ public class Sender implements Runnable {
 
                 case WAITIFS:
                     try {
-                        if (packetToSend.getFrameType() == (byte) 1) {
-                            ll.debugs("waiting sifs to send ack");
-                            Thread.sleep(theRF.aSIFSTime);
-
-                        } else {
                             ll.debugs("waiting difs to send packet");
                             Thread.sleep(theRF.aSIFSTime + 2 * theRF.aSlotTime * collisionWindow() );
-                        }
+
                     } catch (Exception e) {
                         ll.debugs("something went wrong sleeping: 1");
                     }
@@ -117,15 +112,6 @@ public class Sender implements Runnable {
                     currentState = State.WAITIFSWITHBACKOFF;
                     break;
                 case WAITIFSWITHBACKOFF:
-                    // System.out.println("waitifswithbackoff");
-                    if (packetToSend.getFrameType() == (byte) 1) {
-                        try {
-                            ll.debugs("wait sifs to send acks");
-                            Thread.sleep(theRF.aSIFSTime);
-                        } catch (Exception e) {
-                            ll.debugs("Something went wrong Sleeping: 2");
-                        }
-                    }
                     if (theRF.inUse()) {
                         backoffWindowSize++;
                         currentState = State.WAITFORTRANSMISSIONTOEND;
@@ -145,13 +131,7 @@ public class Sender implements Runnable {
                     ll.debugs("Transmit, transmission attempt: " + retransmissionAttempts);
                     theRF.transmit(packetToSend.getPacket());
                     ll.debugs("Sent packet");
-                    if(packetToSend.getFrameType() == (byte) 1){
-                        retrySend = false; // don't try to resend acks,  just break.
-                        break;
-                    } else if (packetToSend.getFrameType() == (byte) 2) {
-                        retrySend = false; //don't try to retry sending beacons because we won't receive an ack for these.
-                        break;
-                    } else if ( packetToSend.getDestShort()== (short) -1 ) {
+                    if ( packetToSend.getDestShort()== (short) -1 ) {
                         retrySend = false; //don't try to resend broadcast messages. cuz we don't need to receive acks for these
                         break;
                     } else {
