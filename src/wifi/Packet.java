@@ -38,7 +38,7 @@ public class Packet{
     private final int destIndex = 2;
     private final int srcIndex = 4;
     private final int dataIndex = 6;
-    private Checksum crc;
+    public Checksum crc;
     private byte[] dumbCrc = new byte[]{(byte) 255, (byte) 255, (byte) 255, (byte) 255};
     public int crcIndex = 6;
     public boolean isRetry;
@@ -176,13 +176,23 @@ public class Packet{
     }
     
     public void setCRC(){
-        crc.update(myBytes, 0, myBytes.length);
-        byte[] newCrc = longToBytes(crc.getValue());
-        for(int i = 0; i < 4; i++){
-            myBytes[crcIndex+i] = newCrc[i];
+        for(int i = 1; i <= 4; i++){
+            myBytes[myBytes.length - i] = (byte)0;
         }
+        int crcIdx = this.myBytes.length - 4;
+        int crcInt = calcCRC();
+        this.myBytes[crcIdx + 0] = (byte)(crcInt >>> 24 & 0xFF);
+        this.myBytes[crcIdx + 1] = (byte)(crcInt >>> 16 & 0xFF);
+        this.myBytes[crcIdx + 2] = (byte)(crcInt >>> 8 & 0xFF);
+        this.myBytes[crcIdx + 3] = (byte)(crcInt & 0xFF);
+        
     }
-    
+
+    public int calcCRC(){
+        CRC32 anotherCRC = new CRC32();
+        anotherCRC.update(this.myBytes, 0, this.myBytes.length - 4);
+        return (int)anotherCRC.getValue();
+    }
 
     public void setDumbCrc(){
         for(int i = 0; i < dumbCrc.length; i++){
@@ -239,6 +249,39 @@ public class Packet{
         return bytes;
     }
 
+    public byte[] intToBytes(int x){
+        byte[] bytes = new byte[4];
+        for(int i = bytes.length-1; i >= 0; i--){
+            bytes[i] = (byte) (x >> (3-i)*8);
+        }
+        return bytes;
+    }
+
+    private int calculateChecksumOLD() {
+        int remainder = -1;
+         
+        int nBytes = this.myBytes.length - 4;
+         
+        for (int bytes = 0; bytes < nBytes; bytes++) {
+          
+         remainder ^= this.myBytes[bytes] << 248;
+          
+         for (int bit = 8; bit > 0; bit--) {
+           
+          if ((remainder & 0x80000000) != 0) {
+            
+           remainder = remainder << 1 ^ 0x4C11DB7;
+          }
+          else {
+            
+           remainder <<= 1;
+          } 
+         } 
+        } 
+         
+        return remainder ^ 0xFFFFFFFF;
+    }
+
     public String toString(){
         String toString = "";
         toString += "Frame Type: " + getFrameType() + "\n";
@@ -264,6 +307,18 @@ public class Packet{
 
     }
 
+    public boolean test() {
+        this.myBytes = "1234567890000".getBytes();
+        crc.update(myBytes, 0, myBytes.length-4);
+        int crcVal = (int)crc.getValue();
+        System.out.println(crcVal);
+        this.myBytes = "1234567890000".getBytes();
+        CRC32 calc = new CRC32();
+        calc.update(myBytes, 0, myBytes.length - 4);
+        int butts = (int)calc.getValue();
+        System.out.println(butts);
+        return (crcVal == butts);
+    }
     
     public static void main(String[] args){
         byte[] data = new byte[3];
@@ -283,7 +338,7 @@ public class Packet{
         //System.out.println(packet.toString());  
         packet.setSeqNum((short)80);
         System.out.println(packet.toString());
-        packet.setFrameType((byte)1);
+        packet.setFrameType((byte)100);
         packet.setSeqNum(packet.getSeqNumShort());
         System.out.println(packet.toString());
         Packet timePacket = new Packet((byte)-1, (short) 1);
@@ -306,6 +361,15 @@ public class Packet{
         System.out.println(timePacket.getCRC());
         timePacket.setCRC();
         System.out.println();
+        byte[] testBytes = timePacket.longToBytes((long)257);
+        byte[] intTestBytes = timePacket.intToBytes(257);
+        System.out.println("byte1: "+testBytes[0]+" byte2: "+testBytes[1]+" byte3: "+testBytes[2]+" byte4: "+testBytes[3]);
+        System.out.println("byte1: "+intTestBytes[0]+" byte2: "+intTestBytes[1]+" byte3: "+intTestBytes[2]+" byte4: "+intTestBytes[3]);
+
+        int oldChecksum = timePacket.calculateChecksumOLD();
+        int newChecksum = (int)timePacket.crc.getValue();
+        System.out.println(oldChecksum + " " + newChecksum);
+        System.out.println(timePacket.test());
     }
 }
     

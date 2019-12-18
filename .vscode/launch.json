@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - newPacket",
+            "request": "launch",
+            "mainClass": "wifi.newPacket",
+            "projectName": "WiFiProject"
+        },
+        {
+            "type": "java",
             "name": "CodeLens (Launch) - Beacon",
             "request": "launch",
             "mainClass": "wifi.Beacon",

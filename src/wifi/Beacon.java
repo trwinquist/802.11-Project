@@ -50,11 +50,11 @@ public class Beacon implements Runnable{
                     timePacket.setFrameType((byte)2);
                     //send new timepacket on theRF
                     if(!theRF.inUse()){
-                        theRF.transmit(timePacket.getPacket());
+                        //theRF.transmit(timePacket.getPacket());
                     }
                     else{
                         while(theRF.inUse());
-                        theRF.transmit(timePacket.getPacket());
+                        //theRF.transmit(timePacket.getPacket());
                     }
                     resetSendTime();
                 }
