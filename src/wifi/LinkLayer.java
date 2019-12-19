@@ -21,7 +21,7 @@ public class LinkLayer implements Dot11Interface
 	private BlockingQueue<Packet> sendQueue;
 	private BlockingQueue<Packet> ackQueue;
 	private Hashtable<Short, Short> seqNums;
-	private int debug = 0;
+	private int debug = 1;
 	public AtomicBoolean maxCW;
 	private Sender transmitter;
 	private Receiver getter;
@@ -173,7 +173,7 @@ public class LinkLayer implements Dot11Interface
 						+ "\n Use 0 for full debug output, and any other number for none.");
 				this.output.println("Command #2: Set slot selection method.  Currently " + (this.maxCW.get() ? "max" : "random")
 						+ "\n Use 0 for random selection, and anything > 0 for max.");
-				this.output.println("Command #3: Set beacon interval.  Currently at " + this.lighthouse.getInterval()
+				this.output.println("Command #3: Set beacon interval.  Currently at " + this.lighthouse.getInterval()/1000
 						+ " seconds" + "\n The value specifies seconds between the start of beacons, and a -1 disables beacons.");
 	
 				this.output.println("-----------------------------------------");
