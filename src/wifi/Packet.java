@@ -101,6 +101,7 @@ public class Packet{
         myBytes[0] = typeByte;
         myBytes[0] = (byte)(myBytes[0] & (byte)31);
         myBytes[0] = (byte)(myBytes[0] | (byte)(typeByte << 5));
+        setCRC();
     }
 
     public byte getRetry(){
@@ -109,6 +110,7 @@ public class Packet{
     }
     public void setRetry(){
         myBytes[0] = (byte) (myBytes[0] & (byte) 16);
+        setCRC();
     }
 
     public short getSeqNumShort(){
@@ -130,6 +132,7 @@ public class Packet{
         seqNumBytes[0]  = (byte) (seqNumBytes[0] & controlByte);
         myBytes[0] = seqNumBytes[0];
         myBytes[1] = seqNumBytes[1];
+        setCRC();
     }
     
     public byte[] getPacket(){
@@ -152,6 +155,7 @@ public class Packet{
         byte[] newEstDest = shortToBytes((short)788);
         myBytes[destIndex] = newDest[0];
         myBytes[destIndex+1] = newDest[1];
+        setCRC();
     }
 
     public byte[] getSrc(){
@@ -165,6 +169,7 @@ public class Packet{
     public void setSrc(byte[] newSrc){
         myBytes[srcIndex] = newSrc[0];
         myBytes[srcIndex+1] = newSrc[1];
+        setCRC();
     }
     
     public byte[] getCRC(){
@@ -242,7 +247,7 @@ public class Packet{
     }
 
     public byte[] longToBytes(long x){
-        byte[] bytes = new byte[4];
+        byte[] bytes = new byte[8];
         for(int i = bytes.length-1; i >= 0; i--){
             bytes[i] = (byte) (x >> (3-i)*8);
         }

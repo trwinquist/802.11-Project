@@ -25,7 +25,7 @@ public class LinkLayer implements Dot11Interface
 	public AtomicBoolean maxCW;
 	private Sender transmitter;
 	private Receiver getter;
-	private Beacon lighthouse;
+	public Beacon lighthouse;
 	
 	private int status;
 

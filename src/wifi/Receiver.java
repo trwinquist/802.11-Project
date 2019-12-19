@@ -30,7 +30,6 @@ public class Receiver implements Runnable {
 	//
     public void run(){
         while(true) {
-            try {
             	byte[] buffer = theRF.receive();
                 ll.debugs("Received a packet");
                 if(buffer.length > 0) {
@@ -38,16 +37,26 @@ public class Receiver implements Runnable {
                     ll.debugs("Received packet destination: " + recvPacket.getDestShort());
                    // System.out.println("rec. packet dest: " + recvPacket.getDestShort());
                     //save dms and broadcasts to queue
-                    if(recvPacket.getDestShort() == localMac || recvPacket.getDestShort() == -1) {
+                    if(recvPacket.getDestShort() == localMac || (recvPacket.getDestShort() == -1 && recvPacket.getFrameType() != (byte)64)) {
                         // ignore any packets if we have more than 4 packets in our recvQueue.
                         if(recvQueue.size() < 4) {
-                            recvQueue.put(recvPacket);
+                            try{
+                                recvQueue.put(recvPacket);
+                            }
+                            catch(Exception e){
+                                ll.debugs("Receive queue put failed" + e.toString());
+                            }
                         }
                         //we want to make sure that we are not acknowledging acks and broadcasts. 
                         if(recvPacket.getFrameType() == (byte) 32) {
                             //acks
                             ll.debugs("Received Ack from: " + recvPacket.getSrcShort());
-                            ackQueue.put(recvPacket);
+                            try{
+                                ackQueue.put(recvPacket);
+                            }catch(Exception e){
+                                ll.debugs(e.toString());
+                            }
+                            
                             //System.out.println("Ackqueue size: " + ackQueue.size());
                         }else if(recvPacket.getDestShort() == localMac && recvQueue.size() < 4) {
                             //only respond to packets sent to us
@@ -76,12 +85,19 @@ public class Receiver implements Runnable {
                             //ack1.setData(msg);
                             //ack1.setData(recvPacket.getData());
                             ll.debugs("about to put ack on send queue stack");
-                            sendQueue.put(ack1);
+                            try{
+                                sendQueue.put(ack1);
+                            }catch(Exception e){
+                                ll.debugs("failed to queue ack" + e.toString());
+                            }
+                            
                             ll.debugs("finished putting ack on the stack");
                         }
-                    } else if(recvPacket.getFrameType() == (byte)2){
-                        if(recvPacket.bytesToLong(recvPacket.getData()) > this.theRF.clock()+offset){
-                            this.offset = (int) (recvPacket.bytesToLong(recvPacket.getData()) - theRF.clock());
+                    } else if(recvPacket.getFrameType() == (byte)64){
+                        ll.debugs("received timestamp");
+                        if(recvPacket.bytesToLong(recvPacket.getData()) > this.theRF.clock()+ll.lighthouse.offset){
+                            ll.lighthouse.offset = (int) (recvPacket.bytesToLong(recvPacket.getData()) - theRF.clock());
+                            ll.debugs("adjusting offset to "+ recvPacket.bytesToLong(recvPacket.getData()));
                         }
                     }
                     else{
@@ -89,11 +105,7 @@ public class Receiver implements Runnable {
                 	}
                 }
 
-            } catch (Exception e){
-               ll.debugs("getting the packet from the queue failed");
-                ll.debugs(e.toString());
             }
-
         }
     }
-}
+
