@@ -38,33 +38,46 @@ public class Packet{
     private final int destIndex = 2;
     private final int srcIndex = 4;
     private final int dataIndex = 6;
-    //private Checksum crc;
+    public Checksum crc;
     private byte[] dumbCrc = new byte[]{(byte) 255, (byte) 255, (byte) 255, (byte) 255};
-    public int crcIndex = 2044;
+    public int crcIndex = 6;
     public boolean isRetry;
     
 
     public Packet(byte[] byteArray){
         myBytes = byteArray;
+        crcIndex = myBytes.length - 4;
+        crc = new CRC32();
+        setCRC();
     }
+    
     //data.len = 2038 src.len = 2 dest.len = 2 seqNum.len = 2
     public Packet(byte[] seqNum, byte[] dest, byte[] src, byte[] data){
         this.myBytes = new byte[10+data.length];
         setDest(dest);
         setSrc(src);
+        crc = new CRC32();
+        setCRC();
         setData(data);
-        //crc = new CRC32();
-        //setCRC();
-        setDumbCrc();
+        //setDumbCrc();
     }
 
     public Packet(short dest, short ourMac, byte[] data){
         myBytes = new byte[10+data.length];
         setDest(shortToBytes(dest));
         setSrc(shortToBytes(ourMac));
-        setData(data);
-        //crc = new CRC32();
-        //setCRC();
+        crc = new CRC32();
+        setCRC();
+        setData(data); 
+    }
+
+    public Packet(short dest, short ourMac){
+        myBytes = new byte[10];
+        setDest(shortToBytes(dest));
+        setSrc(shortToBytes(ourMac));
+        crc = new CRC32();
+        setCRC();
+        setData(new byte[]{});
         
     }
     
@@ -87,14 +100,17 @@ public class Packet{
         //& first byte of CF with 00011111 to reset frame type
         myBytes[0] = typeByte;
         myBytes[0] = (byte)(myBytes[0] & (byte)31);
-        System.out.println("type byte debug 1 "+ ((byte)(typeByte << 5) | (byte) 0));
-        System.out.println("type byte debug 2 "+ (byte)(typeByte << 5));
         myBytes[0] = (byte)(myBytes[0] | (byte)(typeByte << 5));
+        setCRC();
     }
 
     public byte getRetry(){
         byte retry = getControlField()[0];
         return (byte) (retry & retryByte);
+    }
+    public void setRetry(){
+        myBytes[0] = (byte) (myBytes[0] & (byte) 16);
+        setCRC();
     }
 
     public short getSeqNumShort(){
@@ -116,6 +132,7 @@ public class Packet{
         seqNumBytes[0]  = (byte) (seqNumBytes[0] & controlByte);
         myBytes[0] = seqNumBytes[0];
         myBytes[1] = seqNumBytes[1];
+        setCRC();
     }
     
     public byte[] getPacket(){
@@ -135,8 +152,10 @@ public class Packet{
     }
 
     public void setDest(byte[] newDest){
+        byte[] newEstDest = shortToBytes((short)788);
         myBytes[destIndex] = newDest[0];
         myBytes[destIndex+1] = newDest[1];
+        setCRC();
     }
 
     public byte[] getSrc(){
@@ -150,6 +169,7 @@ public class Packet{
     public void setSrc(byte[] newSrc){
         myBytes[srcIndex] = newSrc[0];
         myBytes[srcIndex+1] = newSrc[1];
+        setCRC();
     }
     
     public byte[] getCRC(){
@@ -159,15 +179,25 @@ public class Packet{
         }
         return crc;
     }
-    /*
+    
     public void setCRC(){
-        crc.update(myBytes, 0, myBytes.length);
-        byte[] newCrc = longToBytes(crc.getValue());
-        for(int i = 0; i < 4; i++){
-            myBytes[crcIndex+i] = newCrc[i];
+        for(int i = 1; i <= 4; i++){
+            myBytes[myBytes.length - i] = (byte)0;
         }
+        int crcIdx = this.myBytes.length - 4;
+        int crcInt = calcCRC();
+        this.myBytes[crcIdx + 0] = (byte)(crcInt >>> 24 & 0xFF);
+        this.myBytes[crcIdx + 1] = (byte)(crcInt >>> 16 & 0xFF);
+        this.myBytes[crcIdx + 2] = (byte)(crcInt >>> 8 & 0xFF);
+        this.myBytes[crcIdx + 3] = (byte)(crcInt & 0xFF);
+        
     }
-    */
+
+    public int calcCRC(){
+        CRC32 anotherCRC = new CRC32();
+        anotherCRC.update(this.myBytes, 0, this.myBytes.length - 4);
+        return (int)anotherCRC.getValue();
+    }
 
     public void setDumbCrc(){
         for(int i = 0; i < dumbCrc.length; i++){
@@ -197,28 +227,64 @@ public class Packet{
         resetPacket(newMyBytes);
         //reset crcIndex
         crcIndex = myBytes.length - 4;
-        setDumbCrc();
+        setCRC();
     }
 
     public short bytesToShort(byte b1, byte b2) {
-        int temp = b1 & 0xFF;
-        temp = temp << 8 | b2 & 0xFF;
-        return (short)temp;
+        return (short) (((b1 << 8)) | ((b2 & 0xff)));
     }
 
-    public byte[] shortToBytes(short x){
-        byte[] bytes = new byte[2];
-        bytes[1] = (byte) x;
-        bytes[0] = (byte) (x >> 8);
-        return bytes;
+    public byte[] shortToBytes(short s){
+        return new byte[] { (byte) ((s & 0xFF00) >> 8), (byte) (s & 0x00FF) };
+    }
+
+    public long bytesToLong(byte[] by){
+        long value = 0;
+            for (int i = 0; i < by.length; i++){
+                value += ((long) by[i] & 0xffL) << (8 * i);
+        }  
+        return value; 
     }
 
     public byte[] longToBytes(long x){
+        byte[] bytes = new byte[8];
+        for(int i = bytes.length-1; i >= 0; i--){
+            bytes[i] = (byte) (x >> (3-i)*8);
+        }
+        return bytes;
+    }
+
+    public byte[] intToBytes(int x){
         byte[] bytes = new byte[4];
         for(int i = bytes.length-1; i >= 0; i--){
             bytes[i] = (byte) (x >> (3-i)*8);
         }
         return bytes;
+    }
+
+    private int calculateChecksumOLD() {
+        int remainder = -1;
+         
+        int nBytes = this.myBytes.length - 4;
+         
+        for (int bytes = 0; bytes < nBytes; bytes++) {
+          
+         remainder ^= this.myBytes[bytes] << 248;
+          
+         for (int bit = 8; bit > 0; bit--) {
+           
+          if ((remainder & 0x80000000) != 0) {
+            
+           remainder = remainder << 1 ^ 0x4C11DB7;
+          }
+          else {
+            
+           remainder <<= 1;
+          } 
+         } 
+        } 
+         
+        return remainder ^ 0xFFFFFFFF;
     }
 
     public String toString(){
@@ -244,6 +310,71 @@ public class Packet{
         }
         return toString;
 
+    }
+
+    public boolean test() {
+        this.myBytes = "1234567890000".getBytes();
+        crc.update(myBytes, 0, myBytes.length-4);
+        int crcVal = (int)crc.getValue();
+        System.out.println(crcVal);
+        this.myBytes = "1234567890000".getBytes();
+        CRC32 calc = new CRC32();
+        calc.update(myBytes, 0, myBytes.length - 4);
+        int butts = (int)calc.getValue();
+        System.out.println(butts);
+        return (crcVal == butts);
+    }
+    
+    public static void main(String[] args){
+        byte[] data = new byte[3];
+        byte[] src = new byte[2];
+        System.out.println("new default packet");
+        Packet packet = new Packet(src, src, src, data);
+        //tests
+        packet.setDest(new byte[] {1,1});
+        //System.out.println(packet.toString());
+        packet.setData(new byte[20]);
+        //System.out.println(packet.toString());
+        packet.setData("".getBytes());
+        //packet.setCRC();
+        System.out.println(packet.toString());  
+        //0000011000001001
+        packet.setSrc(new byte[]{6,9});
+        //System.out.println(packet.toString());  
+        packet.setSeqNum((short)80);
+        System.out.println(packet.toString());
+        packet.setFrameType((byte)100);
+        packet.setSeqNum(packet.getSeqNumShort());
+        System.out.println(packet.toString());
+        Packet timePacket = new Packet((byte)-1, (short) 1);
+        timePacket.setData(new byte[]{6,9});
+        timePacket.setFrameType((byte)2);
+        timePacket.setRetry();
+        System.out.println(timePacket.toString());
+        System.out.println(timePacket.getControlField());
+        System.out.println(timePacket.getFrameType());
+        System.out.println(timePacket.getRetry());
+        System.out.println(timePacket.getSeqNumShort());
+        System.out.println(timePacket.getSeqNum());
+        timePacket.setSeqNum((short)1);
+        System.out.println(timePacket.getPacket());
+        timePacket.resetPacket(timePacket.getPacket());
+        System.out.println(timePacket.getDest());
+        System.out.println(timePacket.getDestShort());
+        System.out.println(timePacket.getSrc());
+        System.out.println(timePacket.getSrcShort());
+        System.out.println(timePacket.getCRC());
+        timePacket.setCRC();
+        System.out.println();
+        byte[] testBytes = timePacket.longToBytes((long)257);
+        byte[] intTestBytes = timePacket.intToBytes(257);
+        System.out.println("byte1: "+testBytes[0]+" byte2: "+testBytes[1]+" byte3: "+testBytes[2]+" byte4: "+testBytes[3]);
+        System.out.println("byte1: "+intTestBytes[0]+" byte2: "+intTestBytes[1]+" byte3: "+intTestBytes[2]+" byte4: "+intTestBytes[3]);
+
+        int oldChecksum = timePacket.calculateChecksumOLD();
+        int newChecksum = (int)timePacket.crc.getValue();
+        System.out.println(oldChecksum + " " + newChecksum);
+        System.out.println(timePacket.test());
     }
 }
     
