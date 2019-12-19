@@ -84,15 +84,13 @@ public class Receiver implements Runnable {
                             ll.debugs("is ack1 an ack?" + (ack1.getFrameType() == 32));
                             ack1.setCRC();
                             ll.debugs("about to put ack on send queue stack");
-<<<<<<< HEAD
-                            try{
-                                sendQueue.put(ack1);
-                            }catch(Exception e){
-                                ll.debugs("failed to queue ack" + e.toString());
-                            }
+//                            try{
+//                                sendQueue.put(ack1);
+//                            }catch(Exception e){
+//                                ll.debugs("failed to queue ack" + e.toString());
+//                            }
                             
                             ll.debugs("finished putting ack on the stack");
-=======
                             while(theRF.inUse()){};
                             try{
                                 Thread.sleep(theRF.aSIFSTime);
@@ -102,7 +100,6 @@ public class Receiver implements Runnable {
                             theRF.transmit(ack1.myBytes);
                             ll.debugs("sent Ack1");
                            // ll.debugs("finished putting ack on the stack");
->>>>>>> 9c6ad7da455763c647adfc14cdac9954a96216e9
                         }
                     } else if(recvPacket.getFrameType() == (byte)64){
                         ll.debugs("received timestamp");
