@@ -95,7 +95,9 @@ public class Packet{
         frameType = (byte) (frameTypeByte & frameType);
         return frameType;
     }
-
+    public void setAck(){
+        myBytes[0] = (byte) 32;
+    }
     public void setFrameType(byte typeByte){
         //& first byte of CF with 00011111 to reset frame type
         myBytes[0] = typeByte;
